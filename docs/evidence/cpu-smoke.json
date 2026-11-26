@@ -1,0 +1,757 @@
+{
+  "evidence_type": "actual_local_execution",
+  "automated_discovery": false,
+  "path_note": "Only demo store/restored paths and evaluator evidence_dir are made relative for portability.",
+  "task": {
+    "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+    "created_at": "2026-11-26T14:03:47.196933+00:00",
+    "schema_version": 1,
+    "task": {
+      "context": {
+        "environment": {
+          "cpu_count": 9,
+          "machine": "x86_64",
+          "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+          "python": "3.12.14"
+        },
+        "evaluator_revision": "sha256:5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+        "measurement_scope": "fresh Python + JSONL parse + aggregate + output",
+        "task_revision": "jsonl-aggregate-v1"
+      },
+      "direction": "maximize",
+      "objective": "rows_per_second",
+      "schema_version": 1,
+      "source_paths": [
+        "solution.py"
+      ],
+      "task_id": "jsonl-aggregate-cpu-v1"
+    }
+  },
+  "demo": {
+    "automated_discovery": false,
+    "best_candidate_id": "c-55c1d3cd4e604398",
+    "candidate_count": 3,
+    "candidates": [
+      {
+        "candidate_id": "c-b71929a8d853442b",
+        "evaluation_id": "e-6ab85906ebdc415a",
+        "fixture": "baseline",
+        "metrics": {
+          "max_seconds": 0.22166108000055829,
+          "median_seconds": 0.2210226959996362,
+          "min_seconds": 0.21538870999938808,
+          "rows_per_second": 180976.88936011278
+        },
+        "valid": true
+      },
+      {
+        "candidate_id": "c-55c1d3cd4e604398",
+        "evaluation_id": "e-df6771325e794e8a",
+        "fixture": "optimized",
+        "metrics": {
+          "max_seconds": 0.08930555500046466,
+          "median_seconds": 0.08844911999949545,
+          "min_seconds": 0.08493253400047251,
+          "rows_per_second": 452237.3993119228
+        },
+        "valid": true
+      },
+      {
+        "candidate_id": "c-a561d4ce38624d49",
+        "evaluation_id": "e-a74d7486d50b442c",
+        "fixture": "incorrect",
+        "metrics": {},
+        "valid": false
+      }
+    ],
+    "confirmation_evaluation": "e-44f022c1babc43f0",
+    "confirmation_metrics": {
+      "max_seconds": 0.09244024999952671,
+      "median_seconds": 0.08792054300010932,
+      "min_seconds": 0.08290584099995613,
+      "rows_per_second": 454956.24384337873
+    },
+    "evaluation_count": 4,
+    "kind": "executed_cpu_workflow_smoke",
+    "release": {
+      "candidate_id": "c-55c1d3cd4e604398",
+      "confirmation_evaluation": "e-44f022c1babc43f0",
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:50.770511+00:00",
+      "id": "r-763ba390919b40cf",
+      "schema_version": 1,
+      "search_evaluation": "e-df6771325e794e8a",
+      "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af"
+    },
+    "restored_workspace": "runs/validation-2026-11-26/restored-best",
+    "search_speedup_vs_baseline": 2.49886823069463,
+    "store": "runs/validation-2026-11-26"
+  },
+  "candidate_manifests": [
+    {
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:48.860577+00:00",
+      "directories": [],
+      "files": [
+        {
+          "mode": 420,
+          "path": "solution.py",
+          "sha256": "8d1c8e78b0a8c9f4b93e19c960717ec597f6f1867619324a9dd0a9453ae2ed0b",
+          "size": 393
+        }
+      ],
+      "hypothesis": "Prewritten fixture: one pass per row removes repeated group scans while preserving exact integers.",
+      "id": "c-55c1d3cd4e604398",
+      "lane": "cpu-smoke",
+      "parent_id": "c-b71929a8d853442b",
+      "schema_version": 1,
+      "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+      "source_paths": [
+        "solution.py"
+      ],
+      "task_id": "jsonl-aggregate-cpu-v1"
+    },
+    {
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:49.770086+00:00",
+      "directories": [],
+      "files": [
+        {
+          "mode": 420,
+          "path": "solution.py",
+          "sha256": "cad2673d18dae8567bff60cfe8683967aac4f61de163abff2bd4f13fa8f529e9",
+          "size": 396
+        }
+      ],
+      "hypothesis": "Negative control fixture: dropping negative values should fail the fixed correctness oracle.",
+      "id": "c-a561d4ce38624d49",
+      "lane": "cpu-smoke",
+      "parent_id": "c-55c1d3cd4e604398",
+      "schema_version": 1,
+      "source_digest": "da88b9068fef9a6e1e0c82fd91d7bcd7d19367f272b91ae2daf57c6fae9a5488",
+      "source_paths": [
+        "solution.py"
+      ],
+      "task_id": "jsonl-aggregate-cpu-v1"
+    },
+    {
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:47.202751+00:00",
+      "directories": [],
+      "files": [
+        {
+          "mode": 420,
+          "path": "solution.py",
+          "sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e",
+          "size": 365
+        }
+      ],
+      "hypothesis": "Reference fixture: scan all rows once per group; establish a measured baseline.",
+      "id": "c-b71929a8d853442b",
+      "lane": "cpu-smoke",
+      "parent_id": null,
+      "schema_version": 1,
+      "source_digest": "d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63",
+      "source_paths": [
+        "solution.py"
+      ],
+      "task_id": "jsonl-aggregate-cpu-v1"
+    }
+  ],
+  "evaluations": [
+    {
+      "candidate_id": "c-55c1d3cd4e604398",
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.029498253999918234,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.039058061000105226,
+          "valid": true
+        },
+        {
+          "case": "negative",
+          "rows": 2,
+          "seconds": 0.02700119299970538,
+          "valid": true
+        },
+        {
+          "case": "order_unicode",
+          "rows": 6,
+          "seconds": 0.026828819000002113,
+          "valid": true
+        },
+        {
+          "case": "integer_precision",
+          "rows": 2,
+          "seconds": 0.025671233000139182,
+          "valid": true
+        },
+        {
+          "case": "measure-0",
+          "rows": 40000,
+          "seconds": 0.09244024999952671,
+          "valid": true
+        },
+        {
+          "case": "measure-1",
+          "rows": 40000,
+          "seconds": 0.08792054300010932,
+          "valid": true
+        },
+        {
+          "case": "measure-2",
+          "rows": 40000,
+          "seconds": 0.08290584099995613,
+          "valid": true
+        }
+      ],
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:50.765831+00:00",
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "7afcacfa-b5e0-45bc-bde7-434d22f9bc8a",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_path": "evidence/e-44f022c1babc43f0",
+      "id": "e-44f022c1babc43f0",
+      "kind": "confirmation",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {
+        "max_seconds": 0.09244024999952671,
+        "median_seconds": 0.08792054300010932,
+        "min_seconds": 0.08290584099995613,
+        "rows_per_second": 454956.24384337873
+      },
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+      "source_sha256": "8d1c8e78b0a8c9f4b93e19c960717ec597f6f1867619324a9dd0a9453ae2ed0b",
+      "status": "completed",
+      "total_wall_seconds": 0.8927524720002111,
+      "valid": true
+    },
+    {
+      "candidate_id": "c-b71929a8d853442b",
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.03927214899977116,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.045168203000685025,
+          "valid": true
+        },
+        {
+          "case": "negative",
+          "rows": 2,
+          "seconds": 0.03154722900035267,
+          "valid": true
+        },
+        {
+          "case": "order_unicode",
+          "rows": 6,
+          "seconds": 0.028271236000364297,
+          "valid": true
+        },
+        {
+          "case": "integer_precision",
+          "rows": 2,
+          "seconds": 0.043849598000633705,
+          "valid": true
+        },
+        {
+          "case": "measure-0",
+          "rows": 40000,
+          "seconds": 0.21538870999938808,
+          "valid": true
+        },
+        {
+          "case": "measure-1",
+          "rows": 40000,
+          "seconds": 0.22166108000055829,
+          "valid": true
+        },
+        {
+          "case": "measure-2",
+          "rows": 40000,
+          "seconds": 0.2210226959996362,
+          "valid": true
+        }
+      ],
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:48.854068+00:00",
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "1a11091e-74cb-435d-bf62-00dfb49b8ba9",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_path": "evidence/e-6ab85906ebdc415a",
+      "id": "e-6ab85906ebdc415a",
+      "kind": "search",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {
+        "max_seconds": 0.22166108000055829,
+        "median_seconds": 0.2210226959996362,
+        "min_seconds": 0.21538870999938808,
+        "rows_per_second": 180976.88936011278
+      },
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_digest": "d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63",
+      "source_sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e",
+      "status": "completed",
+      "total_wall_seconds": 1.6187271160006276,
+      "valid": true
+    },
+    {
+      "candidate_id": "c-a561d4ce38624d49",
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.02613280500008841,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.0292175419999694,
+          "valid": true
+        }
+      ],
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:49.864171+00:00",
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "092c0617-1d1a-44b4-9147-428b7cb54f76",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_path": "evidence/e-a74d7486d50b442c",
+      "failure": "negative: result differs from fixed oracle",
+      "id": "e-a74d7486d50b442c",
+      "kind": "search",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {},
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_digest": "da88b9068fef9a6e1e0c82fd91d7bcd7d19367f272b91ae2daf57c6fae9a5488",
+      "source_sha256": "cad2673d18dae8567bff60cfe8683967aac4f61de163abff2bd4f13fa8f529e9",
+      "status": "completed",
+      "total_wall_seconds": 0.08524647499962157,
+      "valid": false
+    },
+    {
+      "candidate_id": "c-55c1d3cd4e604398",
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.02595000200017239,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.026193421999778366,
+          "valid": true
+        },
+        {
+          "case": "negative",
+          "rows": 2,
+          "seconds": 0.03008239299924753,
+          "valid": true
+        },
+        {
+          "case": "order_unicode",
+          "rows": 6,
+          "seconds": 0.03384301999994932,
+          "valid": true
+        },
+        {
+          "case": "integer_precision",
+          "rows": 2,
+          "seconds": 0.023618758000338858,
+          "valid": true
+        },
+        {
+          "case": "measure-0",
+          "rows": 40000,
+          "seconds": 0.08844911999949545,
+          "valid": true
+        },
+        {
+          "case": "measure-1",
+          "rows": 40000,
+          "seconds": 0.08930555500046466,
+          "valid": true
+        },
+        {
+          "case": "measure-2",
+          "rows": 40000,
+          "seconds": 0.08493253400047251,
+          "valid": true
+        }
+      ],
+      "context_fingerprint": "eec7a33d7791c44498a1076980e2408646562e56e81797a3781123fb49139f48",
+      "created_at": "2026-11-26T14:03:49.762423+00:00",
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "170ee836-ca74-41ff-b81c-b15c8fee3533",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_path": "evidence/e-df6771325e794e8a",
+      "id": "e-df6771325e794e8a",
+      "kind": "search",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {
+        "max_seconds": 0.08930555500046466,
+        "median_seconds": 0.08844911999949545,
+        "min_seconds": 0.08493253400047251,
+        "rows_per_second": 452237.3993119228
+      },
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+      "source_sha256": "8d1c8e78b0a8c9f4b93e19c960717ec597f6f1867619324a9dd0a9453ae2ed0b",
+      "status": "completed",
+      "total_wall_seconds": 0.8943229419992349,
+      "valid": true
+    }
+  ],
+  "evaluator_reports": [
+    {
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.029498253999918234,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.039058061000105226,
+          "valid": true
+        },
+        {
+          "case": "negative",
+          "rows": 2,
+          "seconds": 0.02700119299970538,
+          "valid": true
+        },
+        {
+          "case": "order_unicode",
+          "rows": 6,
+          "seconds": 0.026828819000002113,
+          "valid": true
+        },
+        {
+          "case": "integer_precision",
+          "rows": 2,
+          "seconds": 0.025671233000139182,
+          "valid": true
+        },
+        {
+          "case": "measure-0",
+          "rows": 40000,
+          "seconds": 0.09244024999952671,
+          "valid": true
+        },
+        {
+          "case": "measure-1",
+          "rows": 40000,
+          "seconds": 0.08792054300010932,
+          "valid": true
+        },
+        {
+          "case": "measure-2",
+          "rows": 40000,
+          "seconds": 0.08290584099995613,
+          "valid": true
+        }
+      ],
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "7afcacfa-b5e0-45bc-bde7-434d22f9bc8a",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_dir": "evidence/e-44f022c1babc43f0",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {
+        "max_seconds": 0.09244024999952671,
+        "median_seconds": 0.08792054300010932,
+        "min_seconds": 0.08290584099995613,
+        "rows_per_second": 454956.24384337873
+      },
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_sha256": "8d1c8e78b0a8c9f4b93e19c960717ec597f6f1867619324a9dd0a9453ae2ed0b",
+      "status": "completed",
+      "total_wall_seconds": 0.8927524720002111,
+      "valid": true
+    },
+    {
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.03927214899977116,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.045168203000685025,
+          "valid": true
+        },
+        {
+          "case": "negative",
+          "rows": 2,
+          "seconds": 0.03154722900035267,
+          "valid": true
+        },
+        {
+          "case": "order_unicode",
+          "rows": 6,
+          "seconds": 0.028271236000364297,
+          "valid": true
+        },
+        {
+          "case": "integer_precision",
+          "rows": 2,
+          "seconds": 0.043849598000633705,
+          "valid": true
+        },
+        {
+          "case": "measure-0",
+          "rows": 40000,
+          "seconds": 0.21538870999938808,
+          "valid": true
+        },
+        {
+          "case": "measure-1",
+          "rows": 40000,
+          "seconds": 0.22166108000055829,
+          "valid": true
+        },
+        {
+          "case": "measure-2",
+          "rows": 40000,
+          "seconds": 0.2210226959996362,
+          "valid": true
+        }
+      ],
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "1a11091e-74cb-435d-bf62-00dfb49b8ba9",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_dir": "evidence/e-6ab85906ebdc415a",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {
+        "max_seconds": 0.22166108000055829,
+        "median_seconds": 0.2210226959996362,
+        "min_seconds": 0.21538870999938808,
+        "rows_per_second": 180976.88936011278
+      },
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e",
+      "status": "completed",
+      "total_wall_seconds": 1.6187271160006276,
+      "valid": true
+    },
+    {
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.02613280500008841,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.0292175419999694,
+          "valid": true
+        }
+      ],
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "092c0617-1d1a-44b4-9147-428b7cb54f76",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_dir": "evidence/e-a74d7486d50b442c",
+      "failure": "negative: result differs from fixed oracle",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {},
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_sha256": "cad2673d18dae8567bff60cfe8683967aac4f61de163abff2bd4f13fa8f529e9",
+      "status": "completed",
+      "total_wall_seconds": 0.08524647499962157,
+      "valid": false
+    },
+    {
+      "cases": [
+        {
+          "case": "empty",
+          "rows": 0,
+          "seconds": 0.02595000200017239,
+          "valid": true
+        },
+        {
+          "case": "singleton",
+          "rows": 1,
+          "seconds": 0.026193421999778366,
+          "valid": true
+        },
+        {
+          "case": "negative",
+          "rows": 2,
+          "seconds": 0.03008239299924753,
+          "valid": true
+        },
+        {
+          "case": "order_unicode",
+          "rows": 6,
+          "seconds": 0.03384301999994932,
+          "valid": true
+        },
+        {
+          "case": "integer_precision",
+          "rows": 2,
+          "seconds": 0.023618758000338858,
+          "valid": true
+        },
+        {
+          "case": "measure-0",
+          "rows": 40000,
+          "seconds": 0.08844911999949545,
+          "valid": true
+        },
+        {
+          "case": "measure-1",
+          "rows": 40000,
+          "seconds": 0.08930555500046466,
+          "valid": true
+        },
+        {
+          "case": "measure-2",
+          "rows": 40000,
+          "seconds": 0.08493253400047251,
+          "valid": true
+        }
+      ],
+      "environment": {
+        "cpu_count": 9,
+        "implementation": "CPython",
+        "machine": "x86_64",
+        "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+        "python": "3.12.14"
+      },
+      "eval_run_id": "170ee836-ca74-41ff-b81c-b15c8fee3533",
+      "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+      "evidence_dir": "evidence/e-df6771325e794e8a",
+      "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+      "metrics": {
+        "max_seconds": 0.08930555500046466,
+        "median_seconds": 0.08844911999949545,
+        "min_seconds": 0.08493253400047251,
+        "rows_per_second": 452237.3993119228
+      },
+      "parameters": {
+        "groups": 128,
+        "repeats": 3,
+        "rows": 40000,
+        "seed": 20261126
+      },
+      "protocol": "jsonl-aggregate-v1",
+      "schema_version": 1,
+      "source_sha256": "8d1c8e78b0a8c9f4b93e19c960717ec597f6f1867619324a9dd0a9453ae2ed0b",
+      "status": "completed",
+      "total_wall_seconds": 0.8943229419992349,
+      "valid": true
+    }
+  ]
+}

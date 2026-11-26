@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsiforme"
+version = "0.1.0"
+description = "Durable candidates and evidence for a research loop built on RSI-Harness"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+rsiforme = "rsiforme.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

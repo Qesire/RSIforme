@@ -1,0 +1,67 @@
+# Copy outside this repository, then fill with YOUR site's documented values.
+# This profile intentionally fails to load while required RSIFORME_* variables
+# are absent. It is a schema-compatible example, not a tested USTC site profile.
+# Schema: OpenRSI-Index 486eec2b93296c514238f242f172703c3736ccc1
+name = "rsiforme-slurm"
+adapter = "slurm"
+owner = "${USER}"
+
+[scheduler]
+kind = "slurm"
+partition = "${RSIFORME_SLURM_PARTITION}"
+account = "${RSIFORME_SLURM_ACCOUNT}"
+exclusive = false
+poll_seconds = 30.0
+# Add only when the site uses these exact properties:
+# qos = "your-approved-qos"
+# constraint = "a100"  # A site's node feature, not a universal GPU selector.
+# gpu_option = "gpus" # Default is gres; use the site's documented mechanism.
+# request_tmp = false # Only if TmpDisk reporting cannot support --tmp.
+# run_walltime_limit = "12:00" # HH:MM; within the selected partition limit.
+# [scheduler.build]
+# partition = "your-cpu-build-partition"
+# gpus = 0
+
+[storage]
+run_root = "${RSIFORME_SHARED_ROOT}/runs"
+image_cache = "${RSIFORME_SHARED_ROOT}/images"
+logs_root = "${RSIFORME_SHARED_ROOT}/logs"
+hf_home = "${RSIFORME_SHARED_ROOT}/cache/huggingface"
+hf_datasets_cache = "${RSIFORME_SHARED_ROOT}/cache/datasets"
+
+[builder]
+binary = "${RSIFORME_PODMAN_BINARY}"
+cpu_slots = 8
+memory_mb = 32768
+walltime = "02:00"
+temp_root = "${RSIFORME_NODE_TMP}"
+min_tmp_mb = 71680
+# These are example BUILD allocations; size for your Dockerfile and site.
+# If the site requires rootless apt/fakeroot helpers, configure both
+# faked_binary and fakeroot_library as in the pinned upstream profile.
+
+[apptainer]
+binary = "${RSIFORME_APPTAINER_BINARY}"
+mount_policy = "scoped"
+workspace_target = "${RSIFORME_TASK_WORKDIR}"
+container_python = "${RSIFORME_TASK_PYTHON}"
+temp_root = "${RSIFORME_NODE_TMP}"
+dns_bind = "/etc/resolv.conf"
+build_args = []
+work_binds = []
+judge_binds = []
+rdma_binds = []
+# Use actual image WORKDIR and Python path. Add external data binds only
+# where the task requires them. Keep hidden Judge data in judge_binds.
+# Network/process isolation overrides depend on the site's runtime; do not
+# guess them to work around a failing preflight.
+
+[resources]
+min_cpu_slots = 1
+min_memory_mb = 4096
+min_runtime_tmp_mb = 71680
+gpus_per_node = 1
+walltime_margin_seconds = 900
+# Initial example plans at most one GPU per node. Set gpus_per_node to the
+# actual usable count when enabling a multi-GPU task. Work/Judge resource
+# requests come from task.toml, not from the GPU name in this file.

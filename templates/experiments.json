@@ -1,0 +1,20 @@
+{
+  "template_schema": "rsiforme.experiments.v1",
+  "task_id": null,
+  "lane": null,
+  "experiments": [],
+  "entry_fields": {
+    "candidate_id": "归档候选的标识",
+    "parent_id": "本轮起点",
+    "kind": "microbenchmark、search 或 confirmation",
+    "command": "实际 argv 数组",
+    "harness_run_id": "Harness 运行标识；本地实验可为空",
+    "round_id": "该 Harness run 的提交轮次；本地实验可为空",
+    "eval_run_id": "评价器自己的执行标识",
+    "status": "按实际执行结果填写",
+    "metrics": "同一次评价的完整指标及单位",
+    "evidence": "原始输出、环境与配置的位置",
+    "decision": "结果支持的继续、修订、放弃或晋升决定"
+  },
+  "notes": "空列表表示尚无已执行实验。删除 entry_fields 后按真实结果填写；此模板不由 Harness 解析。"
+}

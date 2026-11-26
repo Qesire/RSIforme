@@ -1,0 +1,26 @@
+# RSIforme task schema, separate from the upstream Harness task.toml schema 1.4.
+# Replace every EDIT_ value and verify the source paths before initializing a run.
+# Once initialized, changed task/runtime conditions require a new archive.
+schema_version = 1
+task_id = "EDIT_task_v1"
+objective = "rows_per_second"
+direction = "maximize"
+
+# Relative to --workspace. Include exact source/config needed for delivery.
+# No overlapping paths, symlinks, archive directories, weights or datasets.
+source_paths = ["solution.py"]
+
+[context]
+task_revision = "EDIT_frozen_contract_revision"
+# For local evaluate, SHA-256 of the exact trusted evaluator .py file is required.
+# Example: sha256:<64 lowercase hexadecimal characters>
+evaluator_revision = "sha256:EDIT_evaluator_file_sha256"
+environment = "EDIT_actual_hardware_python_dependencies_image_and_data_references"
+measurement_scope = "EDIT_what_the_timed_region_includes"
+
+# Only Harness import/submit uses these gates. Match the task's emitted metric names.
+# A completed evaluation alone does not establish quality acceptance.
+# For tasks optimizing the native reward, also set objective = "reward" above.
+[[harness.gates]]
+metric = "quality_passed"
+equals = 1

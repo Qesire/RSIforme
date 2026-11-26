@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+.coverage
+runs/
+vendor/
+.upstream/
+.env
+.env.*
+configs/slurm.local.toml
+configs/task.local.toml

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "audited_at": "2026-11-26",
+  "execution": {
+    "harness": {
+      "repository": "https://github.com/OpenRSI-Foundation/OpenRSI-Index.git",
+      "revision": "486eec2b93296c514238f242f172703c3736ccc1",
+      "package_path": "RSI-Harness"
+    },
+    "infra_bench": {
+      "repository": "https://github.com/OpenRSI-Foundation/OpenRSI-AI-Infra-Bench.git",
+      "revision": "949f201b7854be14b884d2ddcd3d3f63a590361c",
+      "submodule_path": "rsi-tasks/sglang-omni",
+      "example_task": "tasks/cosyvoice3-dual-mode"
+    }
+  },
+  "design_references": [
+    {
+      "repository": "https://github.com/huangzesen/decam-rsi-pipeline",
+      "revision": "572082bab9d18396b0f1ce607046baeed32dd159",
+      "role": "persistent candidate history, state recovery and publishing"
+    },
+    {
+      "repository": "https://github.com/NVlabs/Sana",
+      "revision": "1006b6a219b48e5798eec89478e7d12c101de661",
+      "role": "Sol-Engine task contract, profiling, journal and reporting"
+    }
+  ]
+}

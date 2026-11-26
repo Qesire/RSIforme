@@ -1,0 +1,15 @@
+{
+  "template_schema": "rsiforme.reproduction.v1",
+  "status": "NOT_RUN",
+  "task_id": null,
+  "candidate_id": null,
+  "source_digest": null,
+  "environment": {},
+  "assets": [],
+  "setup_commands": [],
+  "evaluation_command": [],
+  "working_directory": null,
+  "seed": null,
+  "outputs": [],
+  "notes": "填写真实运行配置。此文件是研究记录模板，不是 Harness 原生配置。"
+}
