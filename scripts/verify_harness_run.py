@@ -30,11 +30,67 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
+import subprocess
 import sys
 import tomllib
+import tempfile
 from rsiforme.archive import Archive, atomic_json
-from rsiforme.workflow import submit
+from rsiforme.harness import parse_submit_output
+from rsiforme.workflow import normalize_harness_result, submit
+
+def actual_history():
+    text = subprocess.check_output(['rsi-submit', '--list'], text=True)
+    blocks = re.split(r'(?m)(?=^--- rsi-harness submission ---$)', text)
+    reports = {}
+    for block in blocks:
+        if block.startswith('--- rsi-harness submission ---'):
+            report = parse_submit_output(block)
+            if report['round_id'] in reports:
+                raise RuntimeError('duplicate round in native history')
+            reports[report['round_id']] = report
+    return text, reports
+
+def submit_with_lost_response(archive, work, run_id, parent):
+    before_text, before = actual_history()
+    candidate = archive.capture(
+        work, lane='native-ci', parent_id=parent,
+        hypothesis='Prewritten incorrect fixture; also inject client-process loss after native response',
+    )
+    intent = archive.begin_submission(candidate['id'], run_id)
+    # Real native request, real Judge, real client-process termination. The
+    # response is deliberately discarded before any candidate/round binding.
+    child = subprocess.run([sys.executable, '-c',
+        "import os,subprocess,sys; p=subprocess.run(['rsi-submit'],capture_output=True); "
+        "sys.exit(p.returncode) if p.returncode else os._exit(86)"], check=False)
+    if child.returncode != 86:
+        raise RuntimeError('fault injection did not reach its post-response boundary')
+    archive = Archive(archive.root)
+    if archive.submission(intent['id'])['status'] != 'pending':
+        raise RuntimeError('lost response did not preserve the pending intent')
+    after_text, after = actual_history()
+    new_rounds = set(after) - set(before)
+    if len(new_rounds) != 1 or not set(before).issubset(after):
+        raise RuntimeError('native history does not uniquely identify the accepted round')
+    round_id = new_rounds.pop()
+    binding = archive.bind_submission(
+        intent['id'], round_id,
+        note='Recovered unique new round from real same-run history after injected client exit 86',
+        feedback=after_text,
+    )
+    result = normalize_harness_result(archive, binding, after[round_id])
+    with tempfile.TemporaryDirectory(prefix='rsiforme-native-fault-') as raw:
+        evidence = Path(raw)
+        (evidence / 'history-before.txt').write_text(before_text)
+        (evidence / 'history-after.txt').write_text(after_text)
+        atomic_json(evidence / 'fault.json', {
+            'kind': 'injected_client_exit_after_native_response', 'exit_code': child.returncode,
+            'pending_intent_id': intent['id'], 'recovered_round_id': round_id,
+            'native_rounds_added': 1, 'resubmitted': False,
+        })
+        evaluation = archive.record_evaluation(candidate['id'], result, evidence=evidence)
+    return {'submission': binding, 'evaluation': evaluation}
 
 fixtures = Path(sys.argv[1])
 work = Path('/workspace')
@@ -53,10 +109,13 @@ records = []
 parent = None
 for fixture in ('baseline', 'optimized', 'incorrect'):
     shutil.copyfile(fixtures / fixture / 'solution.py', work / 'solution.py')
-    result = submit(
-        archive, work, harness_run_id=run_id, lane='native-ci', parent_id=parent,
-        hypothesis='Prewritten integration fixture: ' + fixture,
-    )
+    if fixture == 'incorrect':
+        result = submit_with_lost_response(archive, work, run_id, parent)
+    else:
+        result = submit(
+            archive, work, harness_run_id=run_id, lane='native-ci', parent_id=parent,
+            hypothesis='Prewritten integration fixture: ' + fixture,
+        )
     parent = result['submission']['candidate_id']
     records.append({'fixture': fixture, **result})
     print(json.dumps({'fixture': fixture, 'evaluation': result['evaluation']}, allow_nan=False), flush=True)
@@ -82,6 +141,10 @@ atomic_json(store / 'native-worker-result.json', {
     'autonomous_discovery': False,
     'harness_run_id': run_id,
     'records': records,
+    'fault_injection': {
+        'kind': 'injected_client_exit_after_native_response', 'exit_code': 86,
+        'recovered_round_id': records[2]['submission']['round_id'], 'resubmitted': False,
+    },
     'confirmation': confirmation,
     'release': release,
 })
@@ -105,7 +168,13 @@ def _one_task_root(logs: Path) -> Path:
 
 
 def _judge_source_digest(task_root: Path, round_id: str) -> str:
-    payload = _read(task_root / "verifier" / round_id / "candidate" / "report.json")
+    candidate_root = task_root / "verifier" / round_id / "candidate"
+    reports = sorted(candidate_root.glob("*/report.json"))
+    if len(reports) != 1:
+        raise ValueError("expected one candidate evaluator execution directory in the native Judge")
+    payload = _read(reports[0])
+    if payload.get("eval_run_id") != reports[0].parent.name:
+        raise ValueError("candidate evaluator ID differs from its evidence directory")
     digest = payload.get("source_sha256")
     if not isinstance(digest, str) or len(digest) != 64:
         raise ValueError("native Judge did not record the candidate source SHA-256")
@@ -148,6 +217,11 @@ def verify_run(output: Path, mode: str, repository: Path) -> dict:
         worker = _read(archive.root / "native-worker-result.json")
         if worker["harness_run_id"] != identity["harness_run_id"]:
             raise ValueError("Work archive was bound to the wrong native run")
+        fault = worker.get("fault_injection", {})
+        if (fault.get("kind") != "injected_client_exit_after_native_response"
+                or fault.get("exit_code") != 86 or fault.get("resubmitted") is not False
+                or fault.get("recovered_round_id") != "agent-3"):
+            raise ValueError("native lost-response recovery was not exercised")
         if archive.summary()["pending_submissions"]:
             raise ValueError("native wrapper left an unresolved submission")
         if len(archive.candidates()) != 3 or len(archive.evaluations()) != 4:
@@ -176,7 +250,8 @@ def verify_run(output: Path, mode: str, repository: Path) -> dict:
                 or confirmation["candidate_id"] != search["candidate_id"]):
             raise ValueError("release lacks a separate native confirmation of the same candidate")
         archive_checks = {"candidates": 3, "evaluations": 4, "source_matches_native_judge": True,
-                          "invalid_control_rejected": True, "release": release}
+                          "invalid_control_rejected": True, "lost_response_recovered": True,
+                          "release": release}
     best = read_best_report(task_root)
     summary = {
         "kind": "native_harness_validation",
