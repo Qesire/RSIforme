@@ -1,0 +1,94 @@
+name: Native RSI-Harness integration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'tasks/**'
+      - 'examples/**'
+      - 'configs/upstreams.lock.json'
+      - 'scripts/verify_harness_run.py'
+      - 'tests/test_native_contract.py'
+      - '.github/workflows/harness-integration.yml'
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tasks/**'
+      - 'examples/**'
+      - 'configs/upstreams.lock.json'
+      - 'scripts/verify_harness_run.py'
+      - 'tests/test_native_contract.py'
+      - '.github/workflows/harness-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native-cpu:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - name: Check out the audited execution engine
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: OpenRSI-Foundation/OpenRSI-Index
+          ref: 486eec2b93296c514238f242f172703c3736ccc1
+          path: .upstream/OpenRSI-Index
+          persist-credentials: false
+      - name: Install actual pinned Harness and RSIforme
+        run: |
+          python -m venv .venv-native
+          .venv-native/bin/python -m pip install -e . -e .upstream/OpenRSI-Index/RSI-Harness
+          mkdir -p "$RUNNER_TEMP/rsiforme-native-evidence"
+          .venv-native/bin/python -m pip freeze > "$RUNNER_TEMP/rsiforme-native-evidence/pip-freeze.txt"
+          docker info > "$RUNNER_TEMP/rsiforme-native-evidence/docker-info.txt"
+          sudo iptables --version
+      - name: Compile real task and validate native configuration
+        env:
+          RSIFORME_REQUIRE_NATIVE: '1'
+          RSIFORME_UPSTREAM: ${{ github.workspace }}/.upstream/OpenRSI-Index
+        run: |
+          .venv-native/bin/python tasks/jsonl-aggregate/sync_assets.py --check
+          .venv-native/bin/python -m unittest discover -s tests -p test_native_contract.py -v
+      - name: Run unmodified native oracle through Work and Judge
+        run: |
+          mkdir -p "$RUNNER_TEMP/rsiforme-native-evidence/oracle"
+          sudo env "PATH=$PATH" "$PWD/.venv-native/bin/rsi-harness" run "$PWD/tasks/jsonl-aggregate" \
+            --agent oracle --max-submissions 2 --timeout 420 --primary-reward reward \
+            --data-root "$RUNNER_TEMP/rsiforme-native-runtime/oracle" \
+            --logs-root "$RUNNER_TEMP/rsiforme-native-evidence/oracle/logs" --verbose \
+            2>&1 | tee "$RUNNER_TEMP/rsiforme-native-evidence/oracle/console.log"
+          sudo "$PWD/.venv-native/bin/python" scripts/verify_harness_run.py verify --mode oracle \
+            --output "$RUNNER_TEMP/rsiforme-native-evidence/oracle"
+      - name: Run archive-aware scripted worker through real native submissions
+        run: |
+          mkdir -p "$RUNNER_TEMP/rsiforme-native-evidence/scripted"
+          sudo env "PATH=$PATH" "$PWD/.venv-native/bin/python" scripts/verify_harness_run.py scripted \
+            --upstream "$PWD/.upstream/OpenRSI-Index" --task "$PWD/tasks/jsonl-aggregate" \
+            --data-root "$RUNNER_TEMP/rsiforme-native-runtime/scripted" \
+            --output "$RUNNER_TEMP/rsiforme-native-evidence/scripted" \
+            2>&1 | tee "$RUNNER_TEMP/rsiforme-native-evidence/scripted/console.log"
+          sudo "$PWD/.venv-native/bin/python" scripts/verify_harness_run.py verify --mode scripted \
+            --output "$RUNNER_TEMP/rsiforme-native-evidence/scripted"
+      - name: Make native evidence readable by artifact uploader
+        if: always()
+        run: |
+          if [ -d "$RUNNER_TEMP/rsiforme-native-evidence" ]; then
+            sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/rsiforme-native-evidence"
+          fi
+      - name: Preserve native reports, source archive and failed-run diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-harness-cpu-${{ github.run_id }}
+          path: ${{ runner.temp }}/rsiforme-native-evidence
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 6
