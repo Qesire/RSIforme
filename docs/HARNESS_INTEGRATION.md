@@ -60,7 +60,7 @@ rsi-harness run /absolute/path/to/task \
 
 `MODEL` 是操作者选择且 Agent 支持的模型，不是本项目预置的模型名。实际 Agent 运行需要其原生凭据配置。第一轮先给出有限的时间和提交预算；预算由任务和 Harness 原生参数控制。
 
-本轮真实模型验收存在上下文传输审批阻断，尚未取得可采纳模型结果；上述通用接入命令不替代所需授权，当前不重试或转用此后端绕过阻断。状态与有限后续范围见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
+公开 JSONL 任务经当前 Codex 入口进行有限真实模型验收的授权已落实。新会话的首轮 worker 在本地客户端运行时初始化阶段因只读文件系统退出，尚未取得可采纳模型结果；这项授权及运行记录不扩展到任意 GPU、Slurm 或其他任务。当前状态、已确认范围和失败证据见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
 
 中断后先检查恢复计划，再继续同一 run：
 

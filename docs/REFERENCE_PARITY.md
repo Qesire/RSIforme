@@ -4,7 +4,7 @@
 
 ## 结论与对齐范围
 
-**v0.2 已实现持久、受预算约束的研究控制器和可复查交付，并完成 scripted worker 的工程闭环；真实模型研究的 P0 验收仍未完成。** 本轮真实 Codex worker 调用被自动审批拒绝，理由是缺少向配置的 `ab.chatgpt.com` 服务入口传输本地上下文的明确授权。此后没有通过重试或替代路径继续。具体阻断、拟授权范围与验收条件见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
+**v0.2 已实现持久、受预算约束的研究控制器和可复查交付，并完成 scripted worker 的工程闭环；真实模型研究的 P0 验收仍未完成。** 公开 JSONL 任务的限定传输与最多两轮 Codex worker 已获明确授权。新会话完成 baseline/profile 后，首轮 worker 在客户端运行时初始化阶段因只读文件系统退出，未产生可采纳模型提案或新候选评价。当前失败记录、已确认范围及早先审批拒绝的历史见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
 
 当前验收目标仍是：**一个持久控制器、一个真实编码 worker、一个固定评价通道，可以有预算地完成多轮研究，并在中断后恢复，最后交付经过新一次完整确认的代码。** 选择最小单控制器是本项目的实现范围，不能靠收窄描述就宣称已达到全部参考水平。GPU 模型任务、Slurm、并行多线、自动新建研究线和跨线组合各自需要对应机制与实际运行证据。
 
@@ -16,7 +16,7 @@
 | --- | --- | --- |
 | G1：持久会话与预算 | `ResearchController` 保存阶段、固定预算和停止原因；准备、worker、评价前核查额度，为确认保留一次评价；未知派发经显式放弃后仍计费。scripted 运行及故障测试覆盖重开状态和限制。 | 真实模型会话中的相同语义；原生剩余提交额度与外层预算的完整联调。外层没有新增一个会自动读取所有原生余额的资源调度器。 |
 | G2：实测基线与诊断 | 有效 baseline、执行证明和封存证据是初始化条件；真实 cProfile 绑定源码/context，并进入 handoff。 | 模型是否依据这些观察提出有区分力的假设；不能从存在 profile 文件直接推断。 |
-| G3：真实 worker 与反馈 | 结构化 argv、stdin、schema、日志、超时和历史交接已实现；scripted 第二轮确实读到第一轮评价。 | **真实模型至少两轮仍被审批阻断，P0 开放。** scripted fixture 不关闭此项。 |
+| G3：真实 worker 与反馈 | 结构化 argv、stdin、schema、日志、超时和历史交接已实现；scripted 第二轮确实读到第一轮评价。授权后的实际首轮保留了初始化失败、退出码和耗时。 | **授权已落实；当前运行初始化失败，两轮真实模型反馈证据仍缺，P0 开放。** scripted fixture 和一次失败启动不关闭此项。 |
 | G4：失败与恢复 | worker 失败、超时、无效候选、准备中断、已完成评价重认、promotion 重认与未知评价的显式放弃已有工程测试；v0.2 原生运行已验证丢失客户端返回后恢复同一 round。 | 真实模型运行中的恢复证据；原生客户端等待 timeout 目前由单元 mock 验证，不能把 lost-response 注入称为真实 timeout 注入。 |
 | G5：父代与方向 | 默认 `best-valid-search` 父代，尊重 maximize/minimize；固定 lanes 轮转，可显式选择父代/线。worker 按 handoff 历史提交本线假设。 | 真实模型消费反馈的行为；ALE 式自动 spawn 新研究线、合并 winning branches、自动更新方向策略**尚未实现**。不能概称完整智能方向管理。 |
 | G6：确认与交付 | `finalize` 恢复选定源码并进行新执行确认；`export_release` 保存准确源码、冻结任务、选定 search/confirmation 和原始证据，独立校验与复查成功；v0.2 原生包装器也通过执行证明与 standalone 校验。 | 真实模型研究结果的确认。完整 research/profile/baseline/失败历史仍在归档及摘要，当前 export 不是包含所有研究历史的一键会话包。 |

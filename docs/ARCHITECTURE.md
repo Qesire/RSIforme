@@ -2,7 +2,7 @@
 
 RSIforme 把可恢复的研究状态放在 RSI-Harness 外层。v0.2 的持久 `ResearchController` 组织基线/profile、父代、worker、历史反馈、预算、恢复和确认；Archive 保存候选、执行身份与封存证据，delivery 导出可复查结果。Work/Judge 生命周期、容器和 Slurm 调度沿用 [RSI-Harness][harness]。
 
-当前默认父代是 best-valid-search，固定研究线按配置轮转；worker 在该线内依据历史提出修改。自动 spawn 新线、合并获胜分支和自更新研究器尚未实现。scripted 控制器闭环已实际运行，真实模型两轮仍因审批阻断待验，见 [参考工程验收](REFERENCE_PARITY.md)。
+当前默认父代是 best-valid-search，固定研究线按配置轮转；worker 在该线内依据历史提出修改。自动 spawn 新线、合并获胜分支和自更新研究器尚未实现。scripted 控制器闭环已实际运行；有限真实模型验收的授权已落实，但首轮 worker 在客户端运行时初始化阶段失败，两轮反馈证据仍缺，见 [参考工程验收](REFERENCE_PARITY.md)。
 
 ## 一轮研究的交接
 

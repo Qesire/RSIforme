@@ -12,7 +12,7 @@
 | v0.2 精确核心提交的 CPU CI | `419abfcc5c752477b848b94d8a42ca8f07e01682` 的 [Actions 45925333216](https://github.com/Qesire/RSIforme/actions/runs/45925333216) 已在 Python 3.11、3.12 全部通过：各 81 项通过、4 项原生依赖测试明确 skip；资产检查、CPU demo、持续控制器和 portable reproduction 均通过。 |
 | v0.1 原生 Work/Judge | 提交 `5ac7e8b2af6697777650af5abee7ee02df2da0c1` 的 [Actions 45922452679](https://github.com/Qesire/RSIforme/actions/runs/45922452679) 已实际通过 Docker Work/Judge、原生提交、故障恢复与确认。候选同样为预写。 |
 | v0.2 原生 Work/Judge | 同一核心提交的 [Actions 45925333312](https://github.com/Qesire/RSIforme/actions/runs/45925333312) 已通过：4 项真实 compiler 测试、原生 oracle 与 scripted 包装器，以及执行证明、追加证据、晚到 verifier 产物和独立发布校验。真实故障注入是丢失客户端返回；客户端等待超时另有单元测试。 |
-| 两轮真实模型 worker | **待验证。** 运行的后续轮询/继续操作被自动审批拒绝，理由是未明确授权向配置的 `ab.chatgpt.com` 入口传输本地上下文。未取得可采纳的模型结果，拒绝后未重试或走替代路径。具体状态、授权范围和验收条件见 [待验证记录](docs/MODEL_VALIDATION_PENDING.md)。 |
+| 两轮真实模型 worker | **授权已落实，实际运行在客户端初始化阶段失败，G3/P0 仍待验证。** 会话 `research-784a05ab0f1544fa` 已完成 baseline/profile；首轮 Codex worker 因只读文件系统退出，未产生可采纳提案或新候选评价。原 900 秒期限现已到期，未启动第二轮。实际记录、已确认范围与验收条件见 [待验证记录](docs/MODEL_VALIDATION_PENDING.md)。 |
 | A100 / Slurm / 生产推理收益 | 尚未执行相应目标任务；CPU 流程结果不证明这些能力。 |
 
 v0.2 已补上持续研究的控制工程，尚不能声称完整达到参考系统的研究能力。真实模型消费反馈并继续研究的 P0 门槛仍然开放。
@@ -125,4 +125,4 @@ API 会检查归档源码未改变；恢复目录须不存在。评价器在本�
 
 各命令的完整参数使用 `python -m rsiforme <命令> --help` 查看。原生 `best_rewards` 可能来自多个候选；适配器按 `best_round` 找到该轮完整指标。提交结果不确定时保留 pending 状态，再从同一 run 的历史恢复，避免重复消耗评价预算。
 
-下一步按 [路线图](docs/ROADMAP.md)，在所需上下文传输授权落实后完成两轮真实模型验收；目标 GPU 任务另建硬件基线。开发时阅读 [系统架构](docs/ARCHITECTURE.md) 与 [研究执行指令](program.md)。
+下一步按 [路线图](docs/ROADMAP.md)，处理客户端运行时初始化问题。本次会话已于 2026-11-27 05:44:31.525519 UTC（北京时间 13:44:31）到期；尚未使用的 worker 数量不构成可恢复额度。未来新实验须另记范围、预算及环境，保留本次失败记录，不能用新目录隐式重置旧会话。相同材料的传输许可已经落实。实际入口及无模型预检命令见 [研究循环](docs/RESEARCH_LOOP.md#公开-jsonl-任务的有限验收入口)。目标 GPU 任务另建硬件基线。开发时阅读 [系统架构](docs/ARCHITECTURE.md) 与 [研究执行指令](program.md)。

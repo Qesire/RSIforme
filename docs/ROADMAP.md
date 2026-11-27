@@ -16,9 +16,13 @@ v0.2 核心冻结到 `419abfcc5c752477b848b94d8a42ca8f07e01682`，CPU CI 在 Pyt
 
 ## 2. 完成有限的真实模型研究验收
 
-本轮 Codex 调用被自动审批拒绝：未明确授权向配置的 `ab.chatgpt.com` 入口传输本地上下文。当前不重试或改走替代路径；G3/P0 保持开放。所需具体授权范围、最多两轮公开 JSONL 代码与反馈传输及验收条件见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
+公开 JSONL 任务经配置的 `ab.chatgpt.com` 入口传输限定材料、最多两轮 Codex worker 的授权已落实。新会话 `research-784a05ab0f1544fa` 已保存实测 baseline/profile；首轮在本地客户端运行时初始化阶段因只读文件系统退出，没有模型提案或新候选评价。当前需解决运行环境启动问题，G3/P0 保持开放。当前状态与早先审批拒绝的历史见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
 
-获得所需授权且环境允许后，使用新归档、实测 baseline/profile 和固定 evaluator，完成两轮真实编码 worker。第二轮需消费第一轮真实结果；最后恢复所选源码，独立确认并交付。即使没有改善，也保留完整假设、候选、指标和失败。scripted worker 继续用于故障演练，不能替代真实模型运行。
+已定位的前置条件是客户端需写入 `CODEX_HOME/installation_id`，而本环境的对应目录只读；可写的 SQLite 与日志目录不能覆盖这一位置。没有启动第二轮重复失败的 worker。新增 [有限验收入口](../examples/jsonl_aggregate/run_model_research.py) 在模型调用前检查运行时条件；源码依据与无模型预检结果见 [运行时验收](MODEL_RUNTIME_VALIDATION.md)。
+
+本次 900 秒 walltime 已于 2026-11-27 05:44:31.525519 UTC（北京时间 13:44:31）到期。未使用的 1 次 worker 数量名额不构成可恢复额度，旧状态快照中的剩余秒数也不代表当前可用时间。运行时可用后，新的实验须另行记录范围、预算与环境，并保留本次失败及消耗；新目录不能隐式重置原会话。相同材料的传输许可已经落实。
+
+完整验收仍要求两轮真实编码 worker 产生可核对的反馈链：第二轮消费第一轮真实评价，最后恢复所选源码，独立确认并交付。当前没有启动新 campaign，也没有取得这条反馈链，因此保持待验证。即使后续没有改善，也保留完整假设、候选、指标和失败。scripted worker 继续用于故障演练，不能替代真实模型运行。
 
 ## 3. 接入目标推理任务与站点
 

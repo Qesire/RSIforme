@@ -1,10 +1,34 @@
 # RSIforme 实施记录
 
+## 2026-11-27：限定授权后的真实 worker 启动
+
+用户明确确认了现有 Codex 客户端经 `ab.chatgpt.com` 传输公开 JSONL 任务限定材料、最多两轮 worker 的范围。随后以控制器提交 `5a7a2a5995adf5c8cdd2b051e7615ef6325c7336` 建立新会话 `research-784a05ab0f1544fa`，实际完成 baseline 和 cProfile，再启动第一轮 Codex worker。**授权已经落实；本轮的实际阻塞是客户端运行时初始化失败，真实模型 G3/P0 仍未关闭。**
+
+| 对象 | 实际记录 |
+| --- | --- |
+| baseline 候选 / 评价 | `c-374739f1cef845a3` / `e-3a4251a0105240d5` |
+| baseline 源码摘要 | `d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63` |
+| context fingerprint | `c9c8b811755ba05e3eb91c90f8d3264b12a0b608d571e950bea9da0d47e68225` |
+| baseline 实测 | 完整正确性检查通过；中位耗时 205.312 ms，吞吐量 194,825.00 行/秒 |
+| 实际诊断 | cProfile 中 `aggregate` self-time 113.654 ms；仅聚合函数且含 profiler 开销，不是正式完整流水线计时 |
+| worker 身份 | `trial-0001`，lane `algorithm`，`codex-cli 0.172.0-alpha.2` |
+| worker 结果 | `worker_failed`，退出码 1，8.848 秒；stdout 0 字节，提案文件 0 字节，无新候选评价 |
+| 预算 / 交付 | 已消耗 1 次 worker、1 次 baseline 评价；没有第二次 worker、confirmation 或 release |
+| 原研究期限 | 900 秒，已于 2026-11-27 05:44:31.525519 UTC（北京时间 13:44:31）到期，不能以未使用的数量名额继续恢复 |
+
+worker 报错 `failed to initialize in-process app-server client: Read-only file system (os error 30)`。同版本官方源码显示，app-server 初始化会以读、写、创建模式打开 `CODEX_HOME/installation_id`；当前 `CODEX_HOME` 只读且缺少该文件。将 `sqlite_home`、`log_dir` 指向可写位置的无模型启动预检仍失败；这两个设置不重定向 installation ID 文件。已确认该启动前置条件无法满足，但没有 syscall trace 可以证明它是唯一观测失败的调用。随后没有再启动第二轮 worker，没有修改只读挂载或身份配置。
+
+这次失败保留为基础设施初始化失败，并继续计入原会话的 trial 计数；不把它视为模型完成了一轮研究、算法被证伪或性能退步。原 walltime 已到期；未使用的 worker 数量、旧状态中的剩余时间快照和新目录均不恢复原预算。未来新实验须另记范围、预算与环境，相同材料的传输许可已经落实。
+
+可复现入口为 [run_model_research.py](../examples/jsonl_aggregate/run_model_research.py)，先检查客户端本地条件，再进入有限研究流程。入口的无模型预检另行记录，不启动 worker 或正式评价，也不关闭 G3；当前没有执行新的 campaign 或实测该入口完整的模型研究路径。命令见 [研究循环](RESEARCH_LOOP.md#公开-jsonl-任务的有限验收入口)。当前失败证据、源码诊断及已确认范围见 [运行时验收](MODEL_RUNTIME_VALIDATION.md)、[证据摘要](evidence/model-runtime-2026-11-27.json) 与 [真实模型待验证项](MODEL_VALIDATION_PENDING.md)。
+
+入口新增 8 项针对停止条件的 mock 测试：只读挂载、预检失败不初始化归档或评价、直接 API 的预检门槛、worker 失败不启动第二轮、预算耗尽、缺少第一轮评价、失败提案计数及 G3 状态。它们不调用 Codex 或真实模型。此次本地完整测试命令 `PYTHONPATH=src python3 -B -m unittest discover -s tests -v` 共收集 93 项，89 项通过、4 项原生 Harness 依赖测试明确 skip，用时 13.213 秒；canonical task assets 检查通过。新入口的 `--help` 可用，实际 `--preflight-only` 返回 2，并准确报告 `codex_state_write_unavailable`。这些代码检查与原模型 campaign 的预算分别记录。
+
 ## 2026-11-27：v0.2 持久研究控制与可移交结果
 
 本轮新增 `ResearchController`、本地冻结 evaluator 及依赖的独立进程执行、证据封存与追加附件、新执行确认约束和可搬移发布包。研究会话保存基线 profile、方向与父代、worker 提示/日志、每轮 handoff、预算、阶段与恢复决定。默认父代为有效 search 中按任务方向选择的最佳结果，研究线按固定配置顺序轮转。
 
-这些机制已经有真实进程和 scripted worker 的工程验证。**真实模型两轮仍待验证，尚未达到完整参考研究系统的验收水平。** 实际 worker 曾有运行状态和 PID，后续轮询/继续操作被自动审批拒绝，理由是未明确授权向配置的 `ab.chatgpt.com` 入口传输本地上下文。没有取得可采纳结果；进程状态和空日志不足以断言是否曾发生网络请求。拒绝后没有通过重试或替代路径继续。详情见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。scripted fixture 的 `model_calls=0` 与该未决模型运行分别记录。
+这些机制已经有真实进程和 scripted worker 的工程验证。**真实模型两轮仍待验证，尚未达到完整参考研究系统的验收水平。** 在限定授权落实前的一次尝试中，实际 worker 曾有运行状态和 PID，后续轮询/继续操作被自动审批拒绝，理由是当时未明确授权向配置的 `ab.chatgpt.com` 入口传输本地上下文。那次没有取得可采纳结果；进程状态和空日志不足以断言是否曾发生网络请求。拒绝后、用户确认前没有通过重试或替代路径继续。后续已确认范围及新会话的初始化失败见本页首节和 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。scripted fixture 的 `model_calls=0` 与真实 worker 尝试分别记录。
 
 ### 实际控制器演练
 
@@ -65,7 +89,7 @@ portable verifier 已补齐独立核对 `execution.confirmation_of` 和实际执
 | v0.1 原生 Docker Work/Judge | 已通过：提交 `5ac7e8b2af6697777650af5abee7ee02df2da0c1`，Actions [45922452679](https://github.com/Qesire/RSIforme/actions/runs/45922452679)；完整 artifact 与逐轮结果见 [原生验收](NATIVE_HARNESS_VALIDATION.md) |
 | v0.2 精确核心提交的 CPU CI | `419abfcc5c752477b848b94d8a42ca8f07e01682`，[45925333216](https://github.com/Qesire/RSIforme/actions/runs/45925333216) 已通过，见上表 |
 | v0.2 精确核心提交的原生 CI | 同一核心提交的 [45925333312](https://github.com/Qesire/RSIforme/actions/runs/45925333312) 已通过，真实依赖、oracle、scripted 包装器及新增证据/交付校验均成功 |
-| 两轮真实模型 | 自动审批阻断，G3/P0 保持待验证；不重试或替代 |
+| 两轮真实模型 | 限定授权已落实；新会话首轮在客户端运行时初始化阶段失败，无可采纳模型提案；G3/P0 保持待验证 |
 | A100、Slurm 与目标推理任务 | 未运行，需目标环境基线与完整作业记录 |
 
 本轮没有实现自动 spawn 研究线、合并 winning branches、自更新控制器或证明研究能力递归提升。固定 lanes、best-valid 父代和 worker 的结构化提案协议是已经实现的明确范围。下一步见 [ROADMAP](ROADMAP.md)。

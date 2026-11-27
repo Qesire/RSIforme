@@ -39,7 +39,9 @@ python -B examples/jsonl_aggregate/profile_baseline.py --store runs/my-task --ca
 
 本机只读检查观察到 `codex-cli 0.172.0-alpha.2`；该版本 `codex exec --help` 确认以上参数以及 `-` 从 stdin 读取提示的行为。控制器通过 argv 启动进程，工作目录为本轮恢复出的源码目录，将任务提示写入 stdin，将 stdout/stderr 留在 trial 目录。`--json` 的事件流保存在 stdout 日志；最终结构化提案由 `--output-last-message` 写入 `{proposal}`。
 
-**本轮真实模型验收仍待完成。** 实际运行曾留下 worker 状态与 PID，后续轮询/继续操作因向 `ab.chatgpt.com` 传输本地上下文未获明确授权而被自动审批拒绝；没有取得可采纳模型结果。拒绝后未重试或走替代路径。有关网络请求是否曾发生，现有进程状态与空日志不足以判断。具体状态和后续有限授权范围见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。下文是接口用法，不代表这一被阻断的真实验收已经通过。
+**本轮限定授权已落实，真实模型验收仍待完成。** 用户确认了经 `ab.chatgpt.com` 传输公开 JSONL 任务限定材料、最多两轮 Codex worker 的范围。会话 `research-784a05ab0f1544fa` 的 baseline 和 profile 已实测；`trial-0001` 在 in-process app-server 初始化时因只读文件系统退出，控制器保存为 `worker_failed`，没有可采纳提案或新候选评价。已消耗 1 次 worker、1 次 baseline 评价，失败尝试计入原预算。原 900 秒 walltime 已于 2026-11-27 05:44:31.525519 UTC（北京时间 13:44:31）到期；未使用的 1 次 worker 数量不构成可恢复额度。实际状态及授权前审批拒绝的历史记录见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。下文是接口用法，不代表两轮模型反馈验收已经通过。
+
+当前已确认 app-server 需要写入 `CODEX_HOME/installation_id`，只读环境无法满足该前置条件；没有启动第二轮 worker。无模型诊断与实际失败 trial 分别保存；源码依据和没有 syscall trace 的证据边界见 [运行时验收记录](MODEL_RUNTIME_VALIDATION.md)。
 
 worker 使用执行环境已有的 CLI 授权、连接和默认模型配置；模板不覆盖模型，也不保存登录材料。开始实际研究前，应在该执行环境完成所需 CLI 登录与服务配置。CLI 存在且参数可解析，只证明调用入口可用；是否完成真实模型轮次，需要查看本轮进程日志、提案、源码变更和后续评测记录。
 
@@ -54,6 +56,28 @@ worker 使用执行环境已有的 CLI 授权、连接和默认模型配置；�
 | `next_direction` | 后续可检验方向；它作为记录保留，不会自动重写研究线配置 |
 
 这些输入输出定义了一个可接入真实编码 Agent 的工作流。模板本身不构成 Agent 自动发现改进、完整原生 Work/Judge 成功或 GPU 性能收益的证据；实际完成的运行应单独记录。
+
+## 公开 JSONL 任务的有限验收入口
+
+在仓库根目录执行本地预检：
+
+```bash
+PYTHONPATH=src python -B examples/jsonl_aggregate/run_model_research.py --preflight-only
+```
+
+该模式只检查 CLI 版本、登录状态和状态目录元数据，不启动 app-server、worker 或正式评价，不创建研究归档，也不提交模型 prompt。当前只读状态目录不能通过这个检查。返回 `0` 仅表示这些本地条件通过，不证明 app-server 启动、网络连接或模型可用；返回 `2` 表示预检或参数检查失败。
+
+在正常可写的 Codex 环境，另行记录新实验的范围、预算与环境后，可使用独立的新归档：
+
+```bash
+PYTHONPATH=src python -B examples/jsonl_aggregate/run_model_research.py --store ../rsiforme-model-run
+```
+
+`--store` 必须是仓库及其祖先目录之外、尚不存在的路径。入口不覆盖或恢复旧归档；新目录不将本次失败尝试清零，也不使已过期的 900 秒预算重新生效。相同材料的传输许可已经落实，新实验的预算仍须单独记录。
+
+执行路径按配置建立 baseline/profile、最多两轮 worker、固定评价与独立确认，然后导出并校验交付。worker 失败时立即保留记录并停止，不自动再调用下一轮。可加 `--reproduce` 请求一次交付包独立复查；成功执行后，在四次研究评价之外单列。如果中断且无法确认评价是否启动，保存 attempt 和 unknown，不能按 0 次处理。该选项不能与 `--preflight-only` 同用。
+
+完整执行返回 `3` 表示实验未完成或运行/验证失败；返回 `0` 对应 `completed_pending_evidence_review`。即使返回 `0`，G3 仍需人工核对真实模型提案、第二轮消费的反馈、源码变更与确认记录，入口不会自动关闭它。**当前没有执行新 campaign，也没有实测此入口完整的两轮模型与交付路径。**
 
 ## CLI：初始化、执行、确认和交付
 

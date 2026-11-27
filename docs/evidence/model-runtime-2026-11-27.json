@@ -1,0 +1,426 @@
+{
+  "schema_version": 1,
+  "record_kind": "authorized_real_worker_runtime_failure",
+  "recorded_at": "2026-11-27T05:44:42.563419+00:00",
+  "status": "blocked_client_initialization",
+  "acceptance_gate": {
+    "name": "G3/P0 real-model two-round feedback validation",
+    "state": "open"
+  },
+  "campaign": {
+    "id": "research-784a05ab0f1544fa",
+    "run_directory_label": "rsiforme-model-validation-20261127-0528",
+    "task_id": "jsonl-model-research-v1",
+    "control_commit": "5a7a2a5995adf5c8cdd2b051e7615ef6325c7336",
+    "context_fingerprint": "c9c8b811755ba05e3eb91c90f8d3264b12a0b608d571e950bea9da0d47e68225",
+    "program_fingerprint": "b0a298d7c1ec634748e7232cb6c599f17bac55a8673d2993987d128db68636f5",
+    "created_at": "2026-11-27T05:29:31.525519+00:00"
+  },
+  "authorization": {
+    "status": "explicit_user_confirmation_received",
+    "date": "2026-11-27",
+    "confirmation": "是的",
+    "approved_endpoint": "ab.chatgpt.com",
+    "scope": "Public JSONL task source, instructions, baseline profile, and this campaign candidate/evaluation feedback.",
+    "max_worker_rounds": 2,
+    "max_formal_evaluations_including_baseline_and_confirmation": 4,
+    "initial_approval_block_is_not_current_blocker": true
+  },
+  "counts": {
+    "worker_rounds_started": 1,
+    "worker_rounds_completed_successfully": 0,
+    "baseline_evaluations": 1,
+    "accepted_model_proposals": 0,
+    "candidates_total_including_baseline": 1,
+    "new_candidates_after_baseline": 0,
+    "new_candidate_evaluations": 0,
+    "confirmations": 0,
+    "promotions": 0,
+    "releases": 0,
+    "second_worker_started": false,
+    "observed_model_request_count": null
+  },
+  "budget": {
+    "limits": {
+      "max_evaluations": 4,
+      "max_trials": 2,
+      "walltime_seconds": 900,
+      "worker_timeout_seconds": 180
+    },
+    "consumed": {
+      "worker_rounds": 1,
+      "formal_evaluations": 1
+    },
+    "unconsumed_count_allowance": {
+      "worker_rounds": 1,
+      "formal_evaluations": 3,
+      "of_which_confirmation_reserved": 1
+    },
+    "persisted_status_snapshot": {
+      "confirmation_reserved": 1,
+      "evaluations_abandoned": 0,
+      "evaluations_consumed": 1,
+      "evaluations_recorded": 1,
+      "evaluations_reserved": 0,
+      "max_evaluations": 4,
+      "max_trials": 2,
+      "remaining_wall_seconds": 875.932505,
+      "trials_started": 1,
+      "walltime_seconds": 900,
+      "worker_timeout_seconds": 180
+    },
+    "original_walltime_deadline_utc": "2026-11-27T05:44:31.525519+00:00",
+    "remaining_wall_seconds_at_recording": 0.0,
+    "budget_reset": false,
+    "second_worker_decision": "Stopped after deterministic runtime blocker; no second worker was launched.",
+    "interpretation": "Unused count slots do not pause or reset the original walltime. After the original deadline this campaign cannot resume by reusing its unused worker count. The persisted remaining_wall_seconds is an earlier snapshot.",
+    "walltime_expired_at_recording": true,
+    "campaign_resume_allowed_by_walltime": false
+  },
+  "baseline": {
+    "candidate_id": "c-374739f1cef845a3",
+    "evaluation_id": "e-3a4251a0105240d5",
+    "evaluation_kind": "search",
+    "role": "baseline",
+    "execution": {
+      "confirmation_of": null,
+      "finished_at": "2026-11-27T05:29:08.960192+00:00",
+      "id": "local-76724657358f443ca760732a5e70558c",
+      "started_at": "2026-11-27T05:29:07.442291+00:00"
+    },
+    "eval_run_id": "b88292bd-25a2-4aab-8995-7fc33bb7ccad",
+    "status": "completed",
+    "valid": true,
+    "metrics": {
+      "max_seconds": 0.2120848369995656,
+      "median_seconds": 0.20531246299924533,
+      "min_seconds": 0.2021019210005761,
+      "rows_per_second": 194824.99705898043
+    },
+    "parameters": {
+      "groups": 128,
+      "repeats": 3,
+      "rows": 40000,
+      "seed": 20261126
+    },
+    "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+    "environment": {
+      "cpu_count": 9,
+      "implementation": "CPython",
+      "machine": "x86_64",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "python": "3.12.14"
+    },
+    "correctness_cases_passed": [
+      "empty",
+      "singleton",
+      "negative",
+      "order_unicode",
+      "integer_precision"
+    ],
+    "source_sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e",
+    "source_digest": "d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63",
+    "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+    "evidence_digest": "93d8c9b1450e24cdbad58e7c59919a65a7a3bf806f8d099b62d5cbcccdaf42b5",
+    "evidence_file_count": 24,
+    "promoted": false
+  },
+  "profile": {
+    "sha256": "5b865686bfe1bf3056259e6715ecdb4b9136ac2d314703f9d97a45434b0ce00e",
+    "source_sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e",
+    "source_digest": "d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63",
+    "scope": "aggregate(records) only; profiler overhead is included; not the scored full pipeline",
+    "note": "This local baseline profile is a diagnostic preparation artifact, not a new formal candidate evaluation or model result."
+  },
+  "trial": {
+    "id": "trial-0001",
+    "lane": "algorithm",
+    "phase": "worker_failed",
+    "parent_candidate_id": "c-374739f1cef845a3",
+    "parent_evaluation_id": "e-3a4251a0105240d5",
+    "evaluation_id": null,
+    "evaluation_request_id": "research-784a05ab0f1544fa/trial-0001",
+    "created_at": "2026-11-27T05:29:31.534587+00:00",
+    "worker_started_at": "2026-11-27T05:29:46.732866+00:00",
+    "terminal_state_recorded_at": "2026-11-27T05:29:55.585041+00:00",
+    "worker_seconds": 8.8481400820001,
+    "worker_returncode": 1,
+    "worker_cli": "codex-cli 0.172.0-alpha.2",
+    "worker_argv_template": [
+      "codex",
+      "exec",
+      "--sandbox",
+      "workspace-write",
+      "--skip-git-repo-check",
+      "--json",
+      "--output-schema",
+      "{schema}",
+      "--output-last-message",
+      "{proposal}",
+      "-"
+    ],
+    "argv_template_note": "Exact invocation paths are retained in the controlled state file; public template replaces only schema and proposal paths.",
+    "stderr_error": "Error: failed to initialize in-process app-server client: Read-only file system (os error 30)",
+    "stdout_bytes": 0,
+    "proposal_bytes": 0,
+    "handoff_sha256": "99c9b420737e726304660cb9eb480a2a6223fea413090974aa777b7b5966ac79",
+    "candidate_source_unchanged": true
+  },
+  "client_preflight": {
+    "role": "No-prompt startup diagnosis after worker failure; not a model research trial or formal evaluation.",
+    "entrypoint": "codex app-server --listen stdio://",
+    "stdin": "subprocess DEVNULL/EOF; no prompt",
+    "supported_config_overrides_reported": [
+      "sqlite_home redirected to writable scratch",
+      "log_dir redirected to writable scratch"
+    ],
+    "result": "failed_read_only_filesystem",
+    "stderr_error": "Error: Read-only file system (os error 30)",
+    "stdout_bytes": 0,
+    "logs": [
+      "client-preflight/startup.stdout.log",
+      "client-preflight/startup.stderr.log"
+    ],
+    "syscall_trace_available": false,
+    "argv_template": [
+      "codex",
+      "app-server",
+      "-c",
+      "sqlite_home=\"{campaign}/client-preflight/state\"",
+      "-c",
+      "log_dir=\"{campaign}/client-preflight/logs\"",
+      "--listen",
+      "stdio://"
+    ],
+    "invocation_metadata_provenance": "Exact command structure, stdin, timeout and return code supplied by the executing operator; only the campaign directory is replaced in the public argv template.",
+    "timeout_seconds": 20,
+    "returncode": 1,
+    "stderr_bytes": 284,
+    "trace_attempt_is_not_app_server_run_evidence": true
+  },
+  "diagnosis": {
+    "classification": "runtime_initialization_blocker_not_model_capability_result",
+    "codex_version": "0.172.0-alpha.2",
+    "official_tag": "rust-v0.172.0-alpha.2",
+    "official_commit": "3abf31016e5dce07567454292571151829135df0",
+    "tag_object_url": "https://api.github.com/repos/openai/codex/git/tags/5bebcbdd57f8479285f64833dbc359e3ec49efcb",
+    "observed_environment": {
+      "codex_home_mount": "read-only, reported by executing operator",
+      "installation_id_exists": false,
+      "required_path_expression": "$CODEX_HOME/installation_id"
+    },
+    "source_explanation": "Both startup paths require a writable installation_id under CODEX_HOME. Redirecting sqlite_home and log_dir does not redirect this path.",
+    "confidence_boundary": "Same-version source establishes a required write incompatible with the observed read-only mount. Without a syscall trace, this report does not claim the uniquely observed failing syscall or exclude additional initialization blockers.",
+    "supported_independent_path_override_found": false,
+    "repair_scope": "A normal supported client runtime must provide writable state. No HOME/CODEX_HOME change, authentication migration, endpoint substitution, approval bypass, or sandbox bypass was used for this campaign.",
+    "sources": [
+      {
+        "id": "installation_id",
+        "url": "https://github.com/openai/codex/blob/3abf31016e5dce07567454292571151829135df0/codex-rs/runtime-agent-instance/src/installation_id.rs",
+        "short_quote": "options.read(true).write(true).create(true);",
+        "finding": "The installation_id path is fixed beneath codex_home. Opening requires write access even when an ID already exists; absent or invalid IDs are written and synced."
+      },
+      {
+        "id": "in_process_startup",
+        "url": "https://github.com/openai/codex/blob/3abf31016e5dce07567454292571151829135df0/codex-rs/app-server/src/in_process.rs",
+        "short_quote": "resolve_installation_id(&args.config.codex_home).await?",
+        "finding": "In-process startup unconditionally resolves the installation ID before returning the client handle."
+      },
+      {
+        "id": "stdio_startup",
+        "url": "https://github.com/openai/codex/blob/3abf31016e5dce07567454292571151829135df0/codex-rs/app-server/src/lib.rs",
+        "short_quote": "resolve_installation_id(&config.codex_home).await?",
+        "finding": "Standalone app-server startup also unconditionally resolves the installation ID before transport initialization."
+      },
+      {
+        "id": "exec_startup",
+        "url": "https://github.com/openai/codex/blob/3abf31016e5dce07567454292571151829135df0/codex-rs/exec/src/lib.rs",
+        "short_quote": "failed to initialize in-process app-server client: {err}",
+        "finding": "exec wraps initialization failures with the observed message. It opens the last-message output before starting the client, so an empty proposal file is not a model result."
+      }
+    ]
+  },
+  "integrity_checks": {
+    "baseline_evidence_inventory_matches": true,
+    "baseline_evidence_digest_matches": true,
+    "program_fingerprint_matches": true,
+    "profile_sha256_matches": true,
+    "outer_handoff_sha256_matches": true,
+    "work_handoff_sha256_matches": true,
+    "work_source_matches_baseline": true,
+    "candidate_count_is_one": true,
+    "evaluation_count_is_one": true,
+    "trial_count_is_one": true,
+    "no_finalization_file": true,
+    "proposal_is_empty": true
+  },
+  "controlled_evidence_manifest": {
+    "path_base": "controlled campaign root identified by campaign.run_directory_label; not published in this repository",
+    "algorithm": "SHA-256 over exact file bytes",
+    "files": [
+      {
+        "path": "setup.json",
+        "size_bytes": 702,
+        "sha256": "49fc111021f53627addd60fb73dd13ccdca72e27f93fed0877755eccdef07fd3"
+      },
+      {
+        "path": "program.json",
+        "size_bytes": 2237,
+        "sha256": "09a317603f987cbd808267ee708d8543ba23363d4c351155a9402558acbc4c79"
+      },
+      {
+        "path": "archive/task.json",
+        "size_bytes": 1750,
+        "sha256": "cd028363ed4a302f7b6aa090286de81876c076446069cec3c08d9b3cdaa69c83"
+      },
+      {
+        "path": "archive/STATUS.json",
+        "size_bytes": 10098,
+        "sha256": "ce636e1cec142064e16b2e6de80f2405278b99dfc2605595be12a3d6da7aa097"
+      },
+      {
+        "path": "archive/research/config.json",
+        "size_bytes": 2807,
+        "sha256": "485f25e97383f9ae334257cf6b63e5172f5ed2f6cf0da2f99daed1675dcd49b7"
+      },
+      {
+        "path": "archive/research/STATUS.json",
+        "size_bytes": 2331,
+        "sha256": "07ff582a5c68974ba6c334cbd478f1596b62fa242d8afe079a07c4133d1f2e4f"
+      },
+      {
+        "path": "archive/research/profile.json",
+        "size_bytes": 3072,
+        "sha256": "5b865686bfe1bf3056259e6715ecdb4b9136ac2d314703f9d97a45434b0ce00e"
+      },
+      {
+        "path": "archive/candidates/c-374739f1cef845a3/manifest.json",
+        "size_bytes": 736,
+        "sha256": "5cadf188a234b60b3041a0f2f1d12b057b8300fb3e75734b397f77e11698add2"
+      },
+      {
+        "path": "archive/candidates/c-374739f1cef845a3/source/solution.py",
+        "size_bytes": 365,
+        "sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e"
+      },
+      {
+        "path": "archive/evaluations/e-3a4251a0105240d5.json",
+        "size_bytes": 6518,
+        "sha256": "f1cfe020260015310364e0e5aafacbe924989df86b15dc97d2ad4e9ce678cc05"
+      },
+      {
+        "path": "archive/evidence/e-3a4251a0105240d5/driver-result.json",
+        "size_bytes": 1618,
+        "sha256": "8fc40ff9132e4d05a8c31d6d59fe6d70c750c66365a4f03b0b76c2699dd5ac14"
+      },
+      {
+        "path": "archive/evidence/e-3a4251a0105240d5/report.json",
+        "size_bytes": 1989,
+        "sha256": "abae798cb5452eae0b79d1144c676207fade886b995a6fe59e97d8b3e5d3fec1"
+      },
+      {
+        "path": "archive/evidence/e-3a4251a0105240d5/rsiforme-binding.json",
+        "size_bytes": 243,
+        "sha256": "5b207e70ac1a5587e38f5a96b6611a22574fa3d65c4866edb2823f9698574f08"
+      },
+      {
+        "path": "archive/evidence/e-3a4251a0105240d5/evaluator/evaluate.py",
+        "size_bytes": 8584,
+        "sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/state.json",
+        "size_bytes": 1617,
+        "sha256": "c9165c1a78337c98d1aca38a459fae7505598e8df66d135d374a94bc419ea925"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/handoff.json",
+        "size_bytes": 30570,
+        "sha256": "99c9b420737e726304660cb9eb480a2a6223fea413090974aa777b7b5966ac79"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/worker-prompt.txt",
+        "size_bytes": 1854,
+        "sha256": "3917e2602eab3be0b29bf567e1c5139b30b0cd4a5a7f09024c456f0dbc6a4dfb"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/worker.stdout.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/worker.stderr.log",
+        "size_bytes": 94,
+        "sha256": "8b1cfa9d9bc69140f7cdb1f12333e44c1fcd137533bab35bef86c476ab55cc9c"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/work/handoff.json",
+        "size_bytes": 30570,
+        "sha256": "99c9b420737e726304660cb9eb480a2a6223fea413090974aa777b7b5966ac79"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/work/proposal.schema.json",
+        "size_bytes": 566,
+        "sha256": "dd4108018ef4aa0adc0bb8abfd7d4dcb3772f1895ca9d49194b7ba6679c91043"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/work/proposal.json",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "archive/research/trials/trial-0001/work/solution.py",
+        "size_bytes": 365,
+        "sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e"
+      },
+      {
+        "path": "client-preflight/startup.stdout.log",
+        "size_bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "client-preflight/startup.stderr.log",
+        "size_bytes": 284,
+        "sha256": "8ca37127e02c0a5b4241a280696aca6e3834890c931dcdcac44e0d9b5279d78e"
+      }
+    ],
+    "raw_run_published": false,
+    "note": "This is a reviewed metadata summary and digest inventory, not a portable reproduction bundle. The full raw run, credentials, and private client configuration are not copied here."
+  },
+  "limitations": [
+    "Empty stdout and an empty proposal file do not establish zero network requests.",
+    "No accepted model result exists, so this failure does not measure model reasoning or optimization ability.",
+    "The failed first worker consumes one worker slot; the second worker was not launched and no budget was reset.",
+    "No second-round feedback consumption, fresh confirmation, promotion, or release was completed.",
+    "The baseline is a local CPU measurement of the defined JSONL pipeline; it is not evidence of model improvement, production performance, or GPU performance.",
+    "The worker read scope was specified by instructions and audited artifacts, not a claim of an adversarial read sandbox."
+  ],
+  "updated_at": "2026-11-27T05:49:03.249022+00:00",
+  "launcher_preflight": {
+    "observed_at": "2026-11-27T05:46:09.883364+00:00",
+    "entrypoint": "examples/jsonl_aggregate/run_model_research.py",
+    "arguments": [
+      "--preflight-only"
+    ],
+    "provenance": "Real invocation observed by the executing operator; the independent reviewer did not repeat it.",
+    "exit_code": 2,
+    "ready": false,
+    "reason": "codex_state_write_unavailable",
+    "scope": "CLI version/login status and state-path metadata only; no exec or app-server startup.",
+    "state": {
+      "state_directory_exists": true,
+      "installation_id_exists": false,
+      "filesystem_readonly": true,
+      "required_path_writable": false
+    },
+    "cli_version": "0.172.0-alpha.2",
+    "version_exit_code": 0,
+    "login_status_exit_code": 0,
+    "worker_launches": 0,
+    "formal_evaluations": 0,
+    "model_prompts_submitted": 0,
+    "new_campaign_initialized": false,
+    "existing_campaign_budget_changed": false,
+    "limitations": "This observation verifies early rejection in the current environment, not the successful end-to-end model campaign. Launcher source was under review, so this record does not assign a finalized source digest."
+  }
+}
