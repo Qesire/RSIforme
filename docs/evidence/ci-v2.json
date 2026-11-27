@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "observed_github_actions_cpu_validation",
+  "commit": "419abfcc5c752477b848b94d8a42ca8f07e01682",
+  "tree": "b165e06b071ffbc054e030c2f74b78a21067daae",
+  "run_id": 45925333216,
+  "url": "https://github.com/Qesire/RSIforme/actions/runs/45925333216",
+  "jobs": [
+    {
+      "job_id": 140265204341,
+      "python": "3.11",
+      "conclusion": "success",
+      "tests_collected": 85,
+      "tests_passed": 81,
+      "tests_skipped": 4,
+      "test_seconds": 14.87,
+      "research_id": "research-95a78ecc5f534a2c",
+      "release_id": "r-74488e0bcd614b91"
+    },
+    {
+      "job_id": 140265204551,
+      "python": "3.12",
+      "conclusion": "success",
+      "tests_collected": 85,
+      "tests_passed": 81,
+      "tests_skipped": 4,
+      "test_seconds": 16.46,
+      "research_id": "research-e62a5406aa664fc7",
+      "release_id": "r-91b4c0e11ac2462b"
+    }
+  ],
+  "checks": [
+    "Canonical packaged task assets match source",
+    "Archive, protocol, delivery and controller tests",
+    "Actual CPU candidate evaluation, rejection, restore and confirmation",
+    "Persistent scripted research in separate processes",
+    "Standalone exported verification and evaluator reproduction"
+  ],
+  "skips": "Four tests require the separately installed pinned RSI-Harness; these skips do not prove native compatibility. The native Actions workflow installs it and requires those tests.",
+  "model_calls": 0,
+  "autonomous_discovery": false,
+  "worker": "Explicit prewritten scripted fixture",
+  "observed_from": "GitHub workflow job status and the decoded logs of both job IDs"
+}

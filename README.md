@@ -1,8 +1,21 @@
 # RSIforme
 
-把真实程序优化组织成可恢复、可测量、可交付的研究循环。RSIforme 保存候选源码、父代、假设和评价证据；生产任务的 Work/Judge、恢复与 Slurm 调度接入固定版本的 **RSI-Harness**。
+把真实程序优化组织成可恢复、可测量、可交付的研究循环。RSIforme 的持久控制器组织基线、profiling、编码 worker、历史反馈、预算、固定评价与确认；候选档案保存精确源码和证据。生产任务的 Work/Judge、容器与 Slurm 调度接入固定版本的 **RSI-Harness**。
 
-首版沿用三类已落地的工程经验：ALE 的候选历史和版本发布，NVIDIA Sol-Engine 的目标合同、profiling 与完整复测，以及 RSI-Harness 的独立评价。SoL-Pi、ERNIE Evolve 提供后续研究线组织的参考。具体来源、版本和公开边界见 [业界流程](docs/INDUSTRY_WORKFLOWS.md)。
+工程设计参考 ALE 的候选历史和版本发布、NVIDIA Sol-Engine 的目标合同与完整复测，以及 RSI-Harness 的独立评价。SoL-Pi、ERNIE Evolve 提供研究线组织的参考。具体来源、版本和公开边界见 [业界流程](docs/INDUSTRY_WORKFLOWS.md)，实际对齐程度见 [参考工程验收](docs/REFERENCE_PARITY.md)。
+
+## 当前验证到哪里
+
+| 范围 | 已有证据与当前状态 |
+| --- | --- |
+| v0.2 持久控制器、本地评价与交付 | 两轮 scripted worker 工程演练完成；第一轮改进、第二轮无效，恢复较早的有效候选并新做确认，导出后独立校验和复查成功。worker 提案来自预写 fixture，模型调用为 0。见 [实施记录](docs/IMPLEMENTATION_RECORD.md)。 |
+| v0.2 精确核心提交的 CPU CI | `419abfcc5c752477b848b94d8a42ca8f07e01682` 的 [Actions 45925333216](https://github.com/Qesire/RSIforme/actions/runs/45925333216) 已在 Python 3.11、3.12 全部通过：各 81 项通过、4 项原生依赖测试明确 skip；资产检查、CPU demo、持续控制器和 portable reproduction 均通过。 |
+| v0.1 原生 Work/Judge | 提交 `5ac7e8b2af6697777650af5abee7ee02df2da0c1` 的 [Actions 45922452679](https://github.com/Qesire/RSIforme/actions/runs/45922452679) 已实际通过 Docker Work/Judge、原生提交、故障恢复与确认。候选同样为预写。 |
+| v0.2 原生 Work/Judge | 同一核心提交的 [Actions 45925333312](https://github.com/Qesire/RSIforme/actions/runs/45925333312) 已通过：4 项真实 compiler 测试、原生 oracle 与 scripted 包装器，以及执行证明、追加证据、晚到 verifier 产物和独立发布校验。真实故障注入是丢失客户端返回；客户端等待超时另有单元测试。 |
+| 两轮真实模型 worker | **待验证。** 运行的后续轮询/继续操作被自动审批拒绝，理由是未明确授权向配置的 `ab.chatgpt.com` 入口传输本地上下文。未取得可采纳的模型结果，拒绝后未重试或走替代路径。具体状态、授权范围和验收条件见 [待验证记录](docs/MODEL_VALIDATION_PENDING.md)。 |
+| A100 / Slurm / 生产推理收益 | 尚未执行相应目标任务；CPU 流程结果不证明这些能力。 |
+
+v0.2 已补上持续研究的控制工程，尚不能声称完整达到参考系统的研究能力。真实模型消费反馈并继续研究的 P0 门槛仍然开放。
 
 ## 先运行本地闭环
 
@@ -11,36 +24,41 @@
 ```bash
 python -m pip install -e . --no-build-isolation
 python -m rsiforme demo --store runs/demo
+python -B examples/jsonl_aggregate/run_research.py --store runs/controller-demo
 python -m unittest discover -s tests -v
 ```
 
 Demo 实际执行 JSONL 聚合任务：归档三个预置实现，独立计时并检查正确性，让错误实现留下失败证据，重新打开档案，恢复最好候选，完成另一轮确认评价并生成发布记录。再次运行时使用新的 `--store` 路径，原记录会保留。
 
-候选由项目预先编写；本例验证流程交接，不测量 Agent 自主发现能力。CPU 计时包含进程启动、JSONL 读取、聚合和输出，其口径见 [示例合同](examples/jsonl_aggregate/README.md)。
+`run_research.py` 进一步实际运行 cProfile、持续控制器、两轮历史交接、错误候选拒绝、恢复确认与可搬移发布包；控制器在不同 OS 进程中重新打开状态。它使用明确标注的 scripted worker，不发送模型请求。两种演练的候选均预先编写，检验的是工程交接。CPU 计时包含进程启动、JSONL 读取、聚合和输出，其口径见 [示例合同](examples/jsonl_aggregate/README.md)。
 
 | 运行产物 | 用途 |
 | --- | --- |
 | `task.json` | 固定任务、目标、环境及评价器身份 |
 | `candidates/<id>/` | 精确源码、文件摘要、父代与假设 |
-| `evaluations/`、`evidence/` | 各次评价、原始输出和环境证据 |
+| `evaluations/`、`evidence/`、`attachments/` | 各次评价、封存的原始证据及后续补存附件 |
 | `submissions/` | 原生 Harness 提交意图及 run/round 关联 |
+| `research/` | 冻结计划、profile、trial 阶段、worker 日志、handoff 和收尾状态 |
 | `STATUS.json`、`JOURNAL.md` | 可由原始记录重新生成的研究视图 |
 | `releases/`、`CURRENT.json` | 通过确认评价的发布身份 |
 | `REPORT.md`、`demo_result.json` | Demo 的实际执行摘要 |
+| `research-result.json` | scripted 控制器演练的真实记录与显式的 `model_calls=0` |
 
 ## 已实现的能力
 
 | 能力 | 当前范围 |
 | --- | --- |
 | 候选归档与恢复 | 显式文件范围、内容核查、父代、lane、假设；恢复到新目录 |
-| 固定任务上下文 | 任务或环境变化时使用新的档案；本地评价器按文件 SHA-256 绑定 |
+| 固定任务上下文 | 任务或环境变化时使用新的档案；本地评价器和声明的依赖按 SHA-256 冻结 |
+| 持久研究控制 | 有效基线、实际 profile、结构化 worker、历史 handoff、trial/评价/walltime 预算、超时与显式恢复 |
+| 父代与方向 | 默认 best-valid-search 父代，固定 lanes 顺序轮转，也可显式指定；worker 在当前线内依据历史提出修改 |
 | 评价与选择 | 保留失败，使用同次评价的指标；确认评价不进入搜索排名 |
-| 发布 | 同一候选需要有效搜索评价和后续确认；已有发布要求确认指标进一步改善 |
+| 发布与交付 | 新执行确认绑定同一候选和 search；已有发布要求改善。导出精确代码、选定原始证据、独立校验和本地复查程序 |
 | Harness 接口 | 原生提交包装、未知提交恢复、按准确轮次导入结果、命令生成 |
 | CPU 任务包 | 本地示例及 Harness 格式的 `tasks/jsonl-aggregate` |
-| 研究指令 | `program.md` 和任务/假设/复现模板；方向与父代由使用者或 Agent 选择 |
+| 研究指令 | `program.md`、冻结 program、任务/假设/复现模板与标准化提案协议 |
 
-本仓库的验证范围见 [实施记录](docs/IMPLEMENTATION_RECORD.md)。当前执行环境没有完成容器 Work/Judge、Slurm/A100 或模型 Agent 的端到端运行；这些入口已经准备，站点和真实任务接入仍需实测。
+自动新建研究线、合并获胜分支和改写研究器策略尚未实现。选择一个最小单控制器是当前实现范围，不代表其已经覆盖 ALE、Sol-Engine 等参考系统的全部能力。控制器使用方法见 [RESEARCH_LOOP](docs/RESEARCH_LOOP.md)。
 
 ## 接入自己的任务
 
@@ -51,7 +69,7 @@ python -m rsiforme init --store runs/my-task --task configs/task.example.toml
 python -m rsiforme capture --store runs/my-task --workspace /path/to/workspace --lane baseline --hypothesis "建立固定负载的基线"
 ```
 
-`capture` 输出候选 `id`。本地可信评价器提供 `evaluate_candidate(snapshot_dir, output_dir)`，返回状态、有效性、指标和独立执行 ID；`evaluate` 先核对其 SHA-256，再运行并保存证据。完整实现可参考示例的 `evaluate.py`。
+`capture` 输出候选 `id`。本地可信评价器提供 `evaluate_candidate(snapshot_dir, output_dir)`，返回状态、有效性、指标和独立执行 ID；`evaluate` 冻结其代码和声明的依赖，在受超时约束的独立进程运行，再封存证据。完整实现可参考示例的 `evaluate.py`。
 
 下面的 Python API 示例可以在仓库根目录直接运行；每次选择新的档案和恢复目录：
 
@@ -97,9 +115,14 @@ API 会检查归档源码未改变；恢复目录须不存在。评价器在本�
 | `import-harness` | 导入已绑定轮次的持久评价记录 |
 | `best` / `restore` | 查看最好搜索结果 / 恢复精确候选 |
 | `promote` | 绑定搜索评价和确认评价，更新发布记录 |
+| `research-init` / `research-prepare` | 冻结研究计划与基线 profile / 建立父代工作区和 handoff |
+| `research-run` / `research-status` | 持续执行或恢复 / 查看阶段、历史和预算 |
+| `research-resolve` | 核查后接受或放弃未知 worker 输出；`--abandon-evaluation` 放弃未知评价并保留预算消耗 |
+| `research-finalize` | 恢复选中源码，完成新的 confirmation 并尝试晋升 |
+| `export` / `verify-release` | 导出已晋升结果 / 校验可搬移发布包 |
 | `report` | 从保存的记录生成 STATUS 和 JOURNAL |
 | `harness-command` | 生成原生运行或恢复命令，不执行作业 |
 
 各命令的完整参数使用 `python -m rsiforme <命令> --help` 查看。原生 `best_rewards` 可能来自多个候选；适配器按 `best_round` 找到该轮完整指标。提交结果不确定时保留 pending 状态，再从同一 run 的历史恢复，避免重复消耗评价预算。
 
-下一步按 [路线图](docs/ROADMAP.md) 完成一个真实任务和站点接入，再运行单条 Agent 研究线。开发时阅读 [系统架构](docs/ARCHITECTURE.md) 与 [研究执行指令](program.md)。
+下一步按 [路线图](docs/ROADMAP.md)，在所需上下文传输授权落实后完成两轮真实模型验收；目标 GPU 任务另建硬件基线。开发时阅读 [系统架构](docs/ARCHITECTURE.md) 与 [研究执行指令](program.md)。

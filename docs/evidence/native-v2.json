@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "kind": "native-harness-v2-validation-summary",
+  "tested_commit": "419abfcc5c752477b848b94d8a42ca8f07e01682",
+  "tested_tree": "b165e06b071ffbc054e030c2f74b78a21067daae",
+  "workflow": {
+    "run_id": 45925333312,
+    "job_id": 140265204418,
+    "url": "https://github.com/Qesire/RSIforme/actions/runs/45925333312",
+    "conclusion": "success",
+    "attempt": 1,
+    "created_at": "2026-11-27T01:55:36Z",
+    "updated_at": "2026-11-27T01:57:44Z"
+  },
+  "artifact": {
+    "id": 15166366660,
+    "name": "native-harness-cpu-45925333312",
+    "url": "https://github.com/Qesire/RSIforme/actions/runs/45925333312/artifacts/15166366660",
+    "sha256": "3d97cbb8037c71364c24f8bb109d02bba4f34e10ceda3c37c48131deba0dc08d",
+    "expires_at": "2026-12-11T01:57:40Z",
+    "download_digest_verified": true
+  },
+  "scope": {
+    "execution_engine": "Pinned original RSI-Harness Docker Work/Judge",
+    "worker": "Upstream scripted acceptance worker; prewritten baseline/optimized/incorrect fixtures",
+    "autonomous_discovery": false,
+    "gpu_validation": false
+  },
+  "upstream_pin": {
+    "package_path": "RSI-Harness",
+    "repository": "https://github.com/OpenRSI-Foundation/OpenRSI-Index.git",
+    "revision": "486eec2b93296c514238f242f172703c3736ccc1"
+  },
+  "native_compiler_tests": {
+    "passed": 4,
+    "skipped": 0
+  },
+  "oracle": {
+    "harness_run_id": "73d1c9d2eef94003baf6100651c49ebc",
+    "round_count": 2,
+    "rounds": [
+      {
+        "exit_code": 0,
+        "metrics": {
+          "quality_passed": 1.0,
+          "reward": 1.8361636559278074
+        },
+        "round_id": "agent-1",
+        "runtime_seconds": 3.4042425449999882,
+        "score": 1.8361636559278074,
+        "status": "completed"
+      },
+      {
+        "exit_code": 0,
+        "metrics": {
+          "quality_passed": 1.0,
+          "reward": 1.8147313243476348
+        },
+        "round_id": "agent-2",
+        "runtime_seconds": 3.4003741450000007,
+        "score": 1.8147313243476348,
+        "status": "completed"
+      }
+    ],
+    "verified": true
+  },
+  "scripted": {
+    "harness_run_id": "64039a9de1f7467c8f7df975f36e37ab",
+    "round_count": 4,
+    "rounds": [
+      {
+        "exit_code": 0,
+        "metrics": {
+          "quality_passed": 1.0,
+          "reward": 0.996057335583396
+        },
+        "round_id": "agent-1",
+        "runtime_seconds": 3.8468430100000433,
+        "score": 0.996057335583396,
+        "status": "completed"
+      },
+      {
+        "exit_code": 0,
+        "metrics": {
+          "quality_passed": 1.0,
+          "reward": 1.8339189655448354
+        },
+        "round_id": "agent-2",
+        "runtime_seconds": 3.4310921219999955,
+        "score": 1.8339189655448354,
+        "status": "completed"
+      },
+      {
+        "exit_code": 1,
+        "metrics": {},
+        "round_id": "agent-3",
+        "runtime_seconds": 2.4237148530000923,
+        "score": null,
+        "status": "verifier_error"
+      },
+      {
+        "exit_code": 0,
+        "metrics": {
+          "quality_passed": 1.0,
+          "reward": 1.8397716122480967
+        },
+        "round_id": "agent-4",
+        "runtime_seconds": 3.453049735000036,
+        "score": 1.8397716122480967,
+        "status": "completed"
+      }
+    ],
+    "verified": true
+  },
+  "gates": {
+    "source_matches_native_judge": true,
+    "invalid_control_rejected": true,
+    "lost_response_recovered": true,
+    "execution_provenance_verified": true,
+    "evidence_append_only_verified": true,
+    "late_verifier_evidence_verified": true
+  },
+  "fault_injection": {
+    "exit_code": 86,
+    "kind": "injected_client_exit_after_native_response",
+    "native_rounds_added": 1,
+    "pending_intent_id": "s-2953ab8b5a3e4c1c",
+    "recovered_round_id": "agent-3",
+    "resubmitted": false,
+    "history_count_before": 2,
+    "history_count_after": 3
+  },
+  "evaluation_provenance": [
+    {
+      "round_id": "agent-1",
+      "evaluation_id": "e-4e0c1729235a425b",
+      "candidate_id": "c-5307ab9ec7b145b6",
+      "execution": {
+        "confirmation_of": null,
+        "finished_at": "2026-11-27T01:57:19.453691+00:00",
+        "id": "harness/64039a9de1f7467c8f7df975f36e37ab/agent-1",
+        "started_at": "2026-11-27T01:57:15.340146+00:00"
+      },
+      "evaluation_record_sha256": "a33ec04b29b69e0b1e3eb9f1a1b0bcd233bef020cff62c90ec0cf1c66309af21",
+      "original_evidence_digest": "6f4e839736466cee9644f6938acf2ed87287d6ac52c4f204bea11811ec8131a4",
+      "verifier_file_count": 39
+    },
+    {
+      "round_id": "agent-2",
+      "evaluation_id": "e-8561c1f229ae4a0a",
+      "candidate_id": "c-93340e8a009e4d85",
+      "execution": {
+        "confirmation_of": null,
+        "finished_at": "2026-11-27T01:57:23.138703+00:00",
+        "id": "harness/64039a9de1f7467c8f7df975f36e37ab/agent-2",
+        "started_at": "2026-11-27T01:57:19.461097+00:00"
+      },
+      "evaluation_record_sha256": "ff1ceb4d937b0586454a584ce0f6d412a066550617dd909a6e422368dc4189a4",
+      "original_evidence_digest": "e6667f59f7aefa2e64f04a5d0e36c71b01dff78a3bec2b4bf059a6d5ac5f58c3",
+      "verifier_file_count": 39
+    },
+    {
+      "round_id": "agent-3",
+      "evaluation_id": "e-9bd1b70cbc4d463a",
+      "candidate_id": "c-0ed7210fdefb4ff2",
+      "execution": {
+        "confirmation_of": null,
+        "finished_at": "2026-11-27T01:57:25.873269+00:00",
+        "id": "harness/64039a9de1f7467c8f7df975f36e37ab/agent-3",
+        "started_at": "2026-11-27T01:57:23.180945+00:00"
+      },
+      "evaluation_record_sha256": "e6fab44cb3e52b385f38780cc76319b60fb711f08bd87e43752dbcac0a4c7af3",
+      "original_evidence_digest": "fc65aa92fd96472492185088d5a4f0789b14a389f5884e480afe7c1e2ce4b866",
+      "verifier_file_count": 27
+    },
+    {
+      "round_id": "agent-4",
+      "evaluation_id": "e-cbe68cf70c2e4cdb",
+      "candidate_id": "c-93340e8a009e4d85",
+      "execution": {
+        "confirmation_of": "e-8561c1f229ae4a0a",
+        "finished_at": "2026-11-27T01:57:29.559586+00:00",
+        "id": "harness/64039a9de1f7467c8f7df975f36e37ab/agent-4",
+        "started_at": "2026-11-27T01:57:25.878636+00:00"
+      },
+      "evaluation_record_sha256": "619e7706f415e4bab2794d33a06ca99950afd073d05e25422854cc358235e841",
+      "original_evidence_digest": "121335e6255048e524d31a71d6b749e32aafb136de62839d3f343964be0aada9",
+      "verifier_file_count": 39
+    }
+  ],
+  "release": {
+    "candidate_id": "c-93340e8a009e4d85",
+    "context_fingerprint": "c2b168ca181d06acd4415be9bc53e8ba790edf149e4ab0f06bea2781389c1831",
+    "exported_this_verification": true,
+    "file_count": 104,
+    "late_verifier_evidence_included": true,
+    "manifest_sha256": "cb1a78ec0070b5908666518a459fb7c59917cebabb7a22714b3575adfbf23975",
+    "release_id": "r-1b75494732444b25",
+    "reproduction_adapter": "rsi-harness",
+    "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+    "standalone_verified": true,
+    "task_id": "jsonl-aggregate-harness-v1",
+    "valid": true
+  },
+  "post_download_checks": {
+    "all_evaluation_records_match_recorded_sha256": true,
+    "all_evidence_inventories_and_attachments_verified": true,
+    "fresh_confirmation_identity_and_order_verified": true,
+    "standalone_release_verified_in_isolated_process": true
+  },
+  "actual_work_image_id": "sha256:907cf6689ebc3fe2e26ccf0bed8e097d18f11ab30a3d9427e21f7d24e80c8442",
+  "judge_image_id": "sha256:51e7ef8dfcce2f546bd285436d7b50420859f6ef64805d79a957ff854e0cff0f",
+  "task_digests": {
+    "environment_digest": "359173ed0f38a0d0fc42611c413dd597be9f4af9efb262d60331553facbad550",
+    "instruction_digest": "d5f3e4ab7c00432c04f207936df347e491569ac18316be1883e770a156310bc9",
+    "source_digest": "411b9df3889959920c811b200aeb5c46de2914a60ae647a34f3190db9dd813cd",
+    "tests_digest": "6ba1eaaae7464bce1b12890714b755e7c98b961ef7e32f1c0e205034022a75ee"
+  }
+}

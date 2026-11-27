@@ -2,7 +2,7 @@
 
 RSIforme 保存候选和研发证据；RSI-Harness 负责 Work、Judge、暂停/恢复与集群作业。当前适配器针对 [OpenRSI-Index `486eec2`](https://github.com/OpenRSI-Foundation/OpenRSI-Index/tree/486eec2b93296c514238f242f172703c3736ccc1/RSI-Harness)，接口升级时先更新合同测试。
 
-本仓库已经执行本地候选闭环和适配器测试。此文的 Harness、镜像构建和 Slurm 命令是接入入口；尚未在目标站点执行，不能据此认定 A100 环境验收通过。
+v0.1 提交 `5ac7e8b2af6697777650af5abee7ee02df2da0c1` 与 v0.2 精确核心提交 `419abfcc5c752477b848b94d8a42ca8f07e01682` 均在托管 runner 上实际完成 Docker Work/Judge、oracle、包装器提交、丢失客户端返回的恢复和独立确认。v0.2 另核验新增执行证明、追加证据、晚到 verifier 产物与独立发布校验，见 [原生验收记录](NATIVE_HARNESS_VALIDATION.md)。这些运行使用预写候选，Slurm/A100 与真实模型研究仍未由它们验证。
 
 ## 1. 取得固定版本
 
@@ -60,6 +60,8 @@ rsi-harness run /absolute/path/to/task \
 
 `MODEL` 是操作者选择且 Agent 支持的模型，不是本项目预置的模型名。实际 Agent 运行需要其原生凭据配置。第一轮先给出有限的时间和提交预算；预算由任务和 Harness 原生参数控制。
 
+本轮真实模型验收存在上下文传输审批阻断，尚未取得可采纳模型结果；上述通用接入命令不替代所需授权，当前不重试或转用此后端绕过阻断。状态与有限后续范围见 [MODEL_VALIDATION_PENDING](MODEL_VALIDATION_PENDING.md)。
+
 中断后先检查恢复计划，再继续同一 run：
 
 ```bash
@@ -98,7 +100,7 @@ rsi-harness resume RUN_ID --cluster /absolute/path/to/site.toml
 
 客户端异常、终端丢失或响应截断，都不能证明服务器没有接受该轮。保留待提交记录，从 **同一 Harness run** 的 `rsi-submit --list` 和宿主机持久记录恢复关联，然后显式绑定。没有建立映射前不要自动重提。适配器拒绝多个 feedback block，防止把 history 整段当成单次返回。
 
-当前首版对每个候选源树要求单写入者。归档完成后至提交期间，不得让另一个 worker 改写相同目录。并行研究线应有独立 Work/源码目录；靠候选 ID 不能解决并发写入同一树的问题。
+当前实现对每个候选源树要求单写入者。归档完成后至提交期间，不得让另一个 worker 改写相同目录。并行研究线应有独立 Work/源码目录；靠候选 ID 不能解决并发写入同一树的问题。
 
 ### 候选范围与归档位置
 
@@ -131,4 +133,8 @@ Native `completed` 表示评价过程完成，不保证任务质量约束通过�
 
 ## 5. 本轮验证边界
 
-`tests/test_harness.py` 使用明确标注的合成接口样例，覆盖同轮取值、原生错误状态、截断/歧义响应、状态持久化边界、路径越界及原生 CLI 组合。测试不调用模型、不调度 GPU，不声称复现上游推理任务。`configs/slurm.example.toml` 的字段已逐项对照公开源码，目标站点参数和环境仍待实际绑定。
+`tests/test_harness.py` 使用明确标注的合成接口样例，覆盖同轮取值、原生错误状态、截断/歧义响应、状态持久化边界、路径越界及 CLI 组合。真实 compiler 和 Docker 运行另由 `tests/test_native_contract.py` 与原生 CI 验收；本地缺原生依赖时显式 skip，不能把 skip 算作实际运行。
+
+v0.1 原生证据为 Actions [45922452679](https://github.com/Qesire/RSIforme/actions/runs/45922452679)。v0.2 精确核心提交 `419abfcc5c752477b848b94d8a42ca8f07e01682` 的 Actions [45925333312](https://github.com/Qesire/RSIforme/actions/runs/45925333312) 也已通过，包括 4 项真实 compiler 测试、oracle、scripted 包装器和新增证据/交付校验。两次 fault 都是丢失客户端返回；真实 native client timeout 注入尚未运行，目前只有单元 mock 验证。
+
+真实模型反馈循环另有未关闭的 P0 验收。`configs/slurm.example.toml` 字段已对照上游源码，但 A100、Slurm 站点和实际推理任务仍待部署与测量，不能由 CPU Docker 成功继承其结论。

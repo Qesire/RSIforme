@@ -2,6 +2,29 @@
 
 本验收把 RSIforme 接到固定版本的真实 Work/Judge，验证候选源码能与原生提交和测量一一对应。执行入口是 GitHub Actions 的 **Native RSI-Harness integration**；一次成功的运行应保留 `verified.json`、完整原生日志和从 Work 导出的候选档案。只有工作流实际通过，才把对应提交标为原生集成已验证。
 
+## v0.2 的实际验收
+
+2026-11-27，提交 `419abfcc5c752477b848b94d8a42ca8f07e01682` 的 [Actions 运行 45925333312](https://github.com/Qesire/RSIforme/actions/runs/45925333312) 全部通过。实际安装的原生 compiler 测试 4 项通过、无跳过；随后 oracle 和档案包装器分别执行了 2 个、4 个独立 Judge 轮次。对应源码树为 `b165e06b071ffbc054e030c2f74b78a21067daae`。精简后的真实结果与证据摘要保存在 [evidence/native-v2.json](evidence/native-v2.json)。
+
+| 原生包装器轮次 | 作用 | 原生结果 | reward |
+| --- | --- | --- | --- |
+| `agent-1` | 基线 | completed，质量通过 | 0.996057335583396 |
+| `agent-2` | 预写优化实现 | completed，质量通过 | 1.8339189655448354 |
+| `agent-3` | 错误实现及客户端丢失返回故障 | verifier_error，exit 1，无 score；历史恢复成功 | 无 |
+| `agent-4` | 恢复最好候选后的独立确认 | completed，质量通过并发布 | 1.8397716122480967 |
+
+原始 oracle 的两次 reward 为 1.8361636559278074 和 1.8147313243476348。原生包装器的 history 在故障前后从 2 轮增至 3 轮，唯一新增 `agent-3`；`fault.json` 保存退出码 86 与 `resubmitted=false`。宿主机逐轮核对了归档源码与 Judge 自行记录的源码 SHA-256，确认 3 个候选、4 次评价和无 pending。
+
+v0.2 的新增门槛也全部实际执行：每轮 `execution` 与提交 intent 的身份和时间一致；晚到的原生报告没有改写原 evaluation 字节或最初证据；每轮追加了 `harness-durable-round`、`harness-verifier-output` 两份封存附件。四轮 verifier 附件分别保留 39、39、27、39 个原始文件，逐文件摘要与原生目录一致。确认评价明确指向 `agent-2` 的搜索评价，并在它完成且登记后开始。
+
+原生 release 含 104 个清单文件，保留选中源码、搜索和确认结果、完整原生 verifier 附件、上游 pin 与环境身份。CI 在独立临时目录中执行了 `python -I release/verify.py`；下载 artifact 后又执行一次，并核查四份原 evaluation 摘要、八份附件和确认时序，均通过。发布包 manifest 的 SHA-256 是 `cb1a78ec0070b5908666518a459fb7c59917cebabb7a22714b3575adfbf23975`。
+
+Work 的实际 Docker image ID 由 `docker inspect --format '{{.Image}}'` 读取为 `sha256:907cf6689ebc3fe2e26ccf0bed8e097d18f11ab30a3d9427e21f7d24e80c8442`，与 run-plan 和档案中的身份一致；没有导出容器环境变量或控制令牌。
+
+[原始证据 artifact](https://github.com/Qesire/RSIforme/actions/runs/45925333312/artifacts/15166366660) 包含两份 `verified.json`、完整日志、Judge 产物、导出档案和独立发布包。下载 ZIP 的 SHA-256 是 `3d97cbb8037c71364c24f8bb109d02bba4f34e10ceda3c37c48131deba0dc08d`。这些 CPU 比值属于本次托管 runner 的测量，不代表模型自主发现收益或 GPU 性能。
+
+此前 [5ac7e8b 的运行](https://github.com/Qesire/RSIforme/actions/runs/45922452679) 已跑通 v0.1 核心；本节使用最终 v0.2 提交的独立新运行验收新增能力。
+
 ## 验收覆盖
 
 | 阶段 | 实际执行 | 通过条件 |
@@ -14,6 +37,8 @@
 | 最好候选恢复 | 从档案恢复选中源码，覆盖已失败的当前实现 | 恢复源码身份不变，最后工作区不决定最好版本 |
 | 独立确认与发布 | 第四个真实 Judge 轮次确认同一候选，再发布 | 搜索与确认轮次不同，源码/上下文相同，有 CURRENT 和发布记录 |
 | 宿主机核验 | 导出 Work 档案，读取原生每轮报告和 Judge 自己记录的源码摘要 | 所有 candidate ↔ run/round ↔ source SHA 关系一致，无 pending |
+| 执行与证据来源 | 核对 intent 时间、execution、原 evaluation 字节、证据和附件摘要 | 原记录不变；每轮必须追加完整原生报告和 verifier 文件；缺失则失败 |
+| 可独立核验的交付 | 导出原生 release，在独立目录用 `python -I` 执行其 verifier | 源码、结果、时序、原始证据、晚到附件与 upstream pin 均一致 |
 
 该工作流用预写候选检验工程交接，原生 Docker、快照、网络策略、提交服务、Judge、reward 解析和持久报告都实际执行。Agent 发现能力和真实模型任务的收益需要各自的运行证据；这里没有模型 API 调用。
 
@@ -62,7 +87,7 @@ python scripts/verify_harness_run.py verify --mode scripted \
 
 ## 证据和结果解释
 
-Actions artifact 名称为 `native-harness-cpu-<workflow-run-id>`，保留期为 14 天。包含两次运行的 console、run-plan、每轮原生 report、Judge 原始产物、导出的源码档案以及校验后生成的 `verified.json`。失败也上传已有日志，便于根据第一处真实错误修复。包含服务 token 和租约的 runtime 目录不纳入上传。
+Actions artifact 名称为 `native-harness-cpu-<workflow-run-id>`，保留期为 14 天。包含两次运行的 console、run-plan、每轮原生 report、Judge 原始产物、导出的源码档案以及校验后生成的 `verified.json`；scripted 目录还包含独立 `release/`、`release-verification.json` 和仅保存实际镜像 ID 的 `work-container-image.json`。失败也上传已有日志，便于根据第一处真实错误修复。包含服务 token 和租约的 runtime 目录不纳入上传。
 
 `verified.json` 保留每轮原始 reward、quality、状态、源码/环境身份。CPU 噪声会改变测得的加速比，因此验收要求正确结果和正的实测 reward，不把某个固定加速倍数当成通用门槛。错误候选必须被拒绝。
 
