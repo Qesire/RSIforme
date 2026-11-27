@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "backend": {
+    "type": "local"
+  },
+  "worker": {
+    "argv": [
+      "codex",
+      "exec",
+      "--sandbox",
+      "workspace-write",
+      "--skip-git-repo-check",
+      "--json",
+      "--output-schema",
+      "{schema}",
+      "--output-last-message",
+      "{proposal}",
+      "-"
+    ]
+  },
+  "budgets": {
+    "max_trials": 2,
+    "max_evaluations": 4,
+    "walltime_seconds": 900,
+    "worker_timeout_seconds": 180
+  },
+  "lanes": [
+    {
+      "id": "algorithm",
+      "goal": "从 profile 与历史评测定位主要计算工作量，提出并实现一个可解释的算法或计算复用假设，在冻结输入域和正确性契约内验证它。"
+    },
+    {
+      "id": "data-movement",
+      "goal": "根据实测热点和已有失败记录，提出并实现减少重复转换、分配或数据搬运的假设；明确它是否影响当前指标实际覆盖的区域。"
+    }
+  ],
+  "instructions": "先阅读 handoff.json 的任务、基线 profile、父代和全部历史。仅修改 source_paths 所声明的候选源码。以实际观察说明假设和变更，在 proposal.evidence_used 中引用具体 profile 发现或历史 evaluation/trial ID。正式评测由控制器在捕获候选后执行；局部检查需记录实际命令与结果。保持 evaluator、任务契约和 handoff 不变。若当前线索不足以支持有意义的修改，可返回 decision=stop。"
+}

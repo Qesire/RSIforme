@@ -28,3 +28,7 @@ jobs:
         env:
           PYTHONPATH: src
         run: python -m rsiforme demo --store runs/ci-demo
+      - name: Execute persistent research and portable reproduction
+        env:
+          PYTHONPATH: src
+        run: python -B examples/jsonl_aggregate/run_research.py --store runs/ci-research

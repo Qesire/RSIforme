@@ -12,6 +12,8 @@ import tomllib
 from .archive import Archive, ArchiveError, load_json
 from .harness import construct_harness_command
 from .workflow import demo, evaluate_local, import_harness, submit
+from .research import ResearchController
+from .delivery import export_release, verify_release
 
 
 def parser() -> argparse.ArgumentParser:
@@ -29,6 +31,13 @@ def parser() -> argparse.ArgumentParser:
         ("promote", "Publish a candidate after a separate confirmation"),
         ("report", "Regenerate STATUS.json and JOURNAL.md from saved records"),
         ("demo", "Execute the CPU workflow with prewritten candidate fixtures"),
+        ("research-init", "Freeze a budgeted research program around a measured baseline"),
+        ("research-prepare", "Prepare one worker handoff from current evidence"),
+        ("research-run", "Run or resume the persistent worker/evaluator loop"),
+        ("research-status", "Inspect research phases, decisions and remaining budgets"),
+        ("research-resolve", "Reconcile an interrupted worker or a recorded evaluation"),
+        ("research-finalize", "Restore the selected candidate and perform fresh confirmation"),
+        ("export", "Export a verified promoted release with its evidence"),
     ):
         child = commands.add_parser(name, help=help_text)
         child.add_argument("--store", required=True, type=Path)
@@ -43,6 +52,7 @@ def parser() -> argparse.ArgumentParser:
             child.add_argument("--candidate", required=True)
         if name in ("evaluate", "submit"):
             child.add_argument("--kind", choices=("search", "confirmation"), default="search")
+            child.add_argument("--confirmation-of", help="Exact search evaluation to confirm")
         if name == "evaluate":
             child.add_argument("--evaluator", required=True, type=Path)
             child.add_argument("--workspace", type=Path, help="Optional restored workspace; must match the candidate")
@@ -65,6 +75,26 @@ def parser() -> argparse.ArgumentParser:
         if name == "demo":
             child.add_argument("--repository", default=Path.cwd(), type=Path,
                                help="Checkout containing examples/jsonl_aggregate (default: cwd)")
+        if name == "research-init":
+            child.add_argument("--program", required=True, type=Path)
+            child.add_argument("--baseline-evaluation", required=True)
+            child.add_argument("--profile", required=True, type=Path)
+        if name == "research-prepare":
+            child.add_argument("--lane")
+            child.add_argument("--parent")
+        if name == "research-run":
+            child.add_argument("--max-new-trials", type=int)
+        if name == "research-resolve":
+            child.add_argument("--trial", required=True)
+            child.add_argument("--note", required=True)
+            child.add_argument("--accept-worker-output", action="store_true")
+            child.add_argument("--abandon-evaluation", action="store_true",
+                               help="After inspecting execution state, consume the unknown evaluation budget and abandon it")
+        if name == "export":
+            child.add_argument("--to", required=True, type=Path)
+            child.add_argument("--release")
+    verify = commands.add_parser("verify-release", help="Verify a portable release independently of its original archive")
+    verify.add_argument("--directory", required=True, type=Path)
     plan = commands.add_parser("harness-command", help="Print a native Harness command; do not execute it")
     plan.add_argument("--task", type=Path)
     plan.add_argument("--agent", default="oracle")
@@ -84,6 +114,8 @@ def main(argv: list[str] | None = None) -> int:
             output = {"executed": False, "argv": command, "shell": shlex.join(command)}
         elif args.command == "demo":
             output = demo(args.store, args.repository)
+        elif args.command == "verify-release":
+            output = verify_release(args.directory)
         else:
             archive = Archive(args.store)
             if args.command == "init":
@@ -98,11 +130,12 @@ def main(argv: list[str] | None = None) -> int:
                                          hypothesis=args.hypothesis or "", parent_id=args.parent)
             elif args.command == "evaluate":
                 output = evaluate_local(archive, args.candidate, args.evaluator,
-                                        kind=args.kind, workspace=args.workspace)
+                                        kind=args.kind, workspace=args.workspace,
+                                        confirmation_of=args.confirmation_of)
             elif args.command == "submit":
                 output = submit(archive, args.workspace, harness_run_id=args.harness_run_id,
                                 candidate_id=args.candidate, lane=args.lane, hypothesis=args.hypothesis,
-                                parent_id=args.parent, kind=args.kind)
+                                parent_id=args.parent, kind=args.kind, confirmation_of=args.confirmation_of)
             elif args.command == "recover":
                 output = archive.bind_submission(args.submission, args.round, note=args.note)
             elif args.command == "import-harness":
@@ -115,6 +148,27 @@ def main(argv: list[str] | None = None) -> int:
                 output = archive.promote(args.candidate, args.search_evaluation, args.confirmation_evaluation)
             elif args.command == "report":
                 output = archive.write_views()
+            elif args.command.startswith("research-"):
+                controller = ResearchController(archive)
+                if args.command == "research-init":
+                    output = controller.initialize(load_json(args.program),
+                                                   baseline_evaluation=args.baseline_evaluation, profile=args.profile)
+                elif args.command == "research-prepare":
+                    output = controller.prepare(lane_id=args.lane, parent_id=args.parent)
+                elif args.command == "research-run":
+                    if args.max_new_trials is not None and args.max_new_trials < 0:
+                        raise ArchiveError("--max-new-trials must be nonnegative")
+                    output = controller.run(max_new_trials=args.max_new_trials)
+                elif args.command == "research-status":
+                    output = controller.status()
+                elif args.command == "research-resolve":
+                    output = controller.resolve(args.trial, note=args.note,
+                                                accept_worker_output=args.accept_worker_output,
+                                                abandon_unknown_evaluation=args.abandon_evaluation)
+                else:
+                    output = controller.finalize()
+            elif args.command == "export":
+                output = export_release(archive, args.to, args.release)
             else:
                 raise ArchiveError("Unrecognized command")
             if args.command not in ("best", "report", "submit", "import-harness"):

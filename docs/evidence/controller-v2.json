@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "kind": "actual_controller_scripted_worker_validation",
+  "validated_at": "2026-11-27T01:44:56.843998+00:00",
+  "version": "0.2.0-development",
+  "command": "PYTHONPATH=src python3 -B examples/jsonl_aggregate/run_research.py --store runs/controller-validation-2026-11-27-final",
+  "script_sha256": "4af8bca387b73ed42a64a80305564e723fd15bd13845d2da0a1f164bb66b761a",
+  "model_calls": 0,
+  "autonomous_discovery": false,
+  "scope": "Actual CPU evaluator, actual cProfile, two fresh controller OS processes and scripted proposals, restored source confirmation, exported standalone verification and evaluator reexecution. This is an engineering validation; no learned or autonomous improvement is claimed.",
+  "research_id": "research-0166851c9e43482a",
+  "baseline_evaluation": "e-3448895a1192446e",
+  "trials": [
+    {
+      "id": "trial-0001",
+      "lane_id": null,
+      "parent_id": "c-8bd4c8987b40493e",
+      "candidate_id": "c-0845a0f2bbe645a5",
+      "phase": "completed",
+      "decision": "improved",
+      "evaluation_id": "e-eb0fcebb005447a4"
+    },
+    {
+      "id": "trial-0002",
+      "lane_id": null,
+      "parent_id": "c-0845a0f2bbe645a5",
+      "candidate_id": "c-45b93d5a17a6476a",
+      "phase": "completed",
+      "decision": "invalid",
+      "evaluation_id": "e-d54cea90b51048af"
+    }
+  ],
+  "budget": {
+    "confirmation_reserved": 0,
+    "evaluations_abandoned": 0,
+    "evaluations_consumed": 4,
+    "evaluations_recorded": 4,
+    "evaluations_reserved": 0,
+    "max_evaluations": 4,
+    "max_trials": 2,
+    "remaining_wall_seconds": 176.714092,
+    "trials_started": 2,
+    "walltime_seconds": 180,
+    "worker_timeout_seconds": 15
+  },
+  "evaluations": [
+    {
+      "id": "e-3448895a1192446e",
+      "candidate_id": "c-8bd4c8987b40493e",
+      "kind": "search",
+      "status": "completed",
+      "valid": true,
+      "metrics": {
+        "max_seconds": 0.2542575779998515,
+        "median_seconds": 0.21149735100061662,
+        "min_seconds": 0.2072735459996693,
+        "rows_per_second": 189127.6642981849
+      },
+      "source_digest": "d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63",
+      "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+      "execution": {
+        "confirmation_of": null,
+        "finished_at": "2026-11-27T01:44:55.275544+00:00",
+        "id": "local-c42a0b5c36da45e592b8a5e394861897",
+        "started_at": "2026-11-27T01:44:53.707529+00:00"
+      },
+      "evidence_digest": "237475146796730d6ba53e12b93ac96eda3c0491db63e241a7b77632608499e2"
+    },
+    {
+      "id": "e-eb0fcebb005447a4",
+      "candidate_id": "c-0845a0f2bbe645a5",
+      "kind": "search",
+      "status": "completed",
+      "valid": true,
+      "metrics": {
+        "max_seconds": 0.07972759400036011,
+        "median_seconds": 0.07349083500048437,
+        "min_seconds": 0.07231579499966756,
+        "rows_per_second": 544285.5561477342
+      },
+      "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+      "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+      "execution": {
+        "confirmation_of": null,
+        "finished_at": "2026-11-27T01:44:56.535633+00:00",
+        "id": "research-0166851c9e43482a/trial-0001",
+        "started_at": "2026-11-27T01:44:55.569518+00:00"
+      },
+      "evidence_digest": "7835b12686523d5d47f9c36b4dbcbf3f587554c82a6bcacc40ba1a7a7bf16590"
+    },
+    {
+      "id": "e-d54cea90b51048af",
+      "candidate_id": "c-45b93d5a17a6476a",
+      "kind": "search",
+      "status": "completed",
+      "valid": false,
+      "metrics": {},
+      "source_digest": "da88b9068fef9a6e1e0c82fd91d7bcd7d19367f272b91ae2daf57c6fae9a5488",
+      "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+      "execution": {
+        "confirmation_of": null,
+        "finished_at": "2026-11-27T01:44:56.811021+00:00",
+        "id": "research-0166851c9e43482a/trial-0002",
+        "started_at": "2026-11-27T01:44:56.696931+00:00"
+      },
+      "evidence_digest": "ea08bafc3f529a09f29296581596e49bbe2b5bd4257364baad9972fc0b840458"
+    },
+    {
+      "id": "e-9044dd5d65d44325",
+      "candidate_id": "c-0845a0f2bbe645a5",
+      "kind": "confirmation",
+      "status": "completed",
+      "valid": true,
+      "metrics": {
+        "max_seconds": 0.12012958700051968,
+        "median_seconds": 0.07742377599970496,
+        "min_seconds": 0.07344860700050049,
+        "rows_per_second": 516637.16324236663
+      },
+      "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+      "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+      "execution": {
+        "confirmation_of": "e-eb0fcebb005447a4",
+        "finished_at": "2026-11-27T01:44:57.767368+00:00",
+        "id": "research-0166851c9e43482a/confirmation",
+        "started_at": "2026-11-27T01:44:56.850590+00:00"
+      },
+      "evidence_digest": "2d8ec3adbda81ea95011f22c42caf2d789a6bcad549863f92a7b37fae8da7487"
+    }
+  ],
+  "finalization": {
+    "candidate_id": "c-0845a0f2bbe645a5",
+    "created_at": "2026-11-27T01:44:56.843998+00:00",
+    "dispatched": true,
+    "dispatched_at": "2026-11-27T01:44:56.848142+00:00",
+    "evaluation_id": "e-9044dd5d65d44325",
+    "execution_id": "research-0166851c9e43482a/confirmation",
+    "phase": "promoted",
+    "release_id": "r-36c2a09ac4d041e8",
+    "search_evaluation": "e-eb0fcebb005447a4"
+  },
+  "export": {
+    "candidate_id": "c-0845a0f2bbe645a5",
+    "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+    "file_count": 59,
+    "manifest_sha256": "91f30c4843abf0ca378991b7508df4f5888661cabb21914d1e1a199de87edc02",
+    "release_id": "r-36c2a09ac4d041e8",
+    "reproduction_adapter": "local-python",
+    "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+    "task_id": "jsonl-controller-v2",
+    "valid": true
+  },
+  "portable_verify": {
+    "valid": true,
+    "release_id": "r-36c2a09ac4d041e8",
+    "candidate_id": "c-0845a0f2bbe645a5",
+    "task_id": "jsonl-controller-v2",
+    "source_digest": "c91a3e68ad7bfd8b93a5da9d98795aa0d64603085ec817c6e61716192b06c0af",
+    "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+    "file_count": 59,
+    "reproduction_adapter": "local-python"
+  },
+  "portable_reproduction": {
+    "eval_run_id": "44c172e2-36c8-4826-9b07-78ec9a18a1ed",
+    "status": "completed",
+    "valid": true,
+    "metrics": {
+      "rows_per_second": 524520.3494187413,
+      "median_seconds": 0.07626014899960865,
+      "min_seconds": 0.07572604400047567,
+      "max_seconds": 0.07792964499913069
+    },
+    "measurement_scope": "fresh Python process + JSONL parsing + aggregate + JSON output",
+    "environment": {
+      "python": "3.12.14",
+      "implementation": "CPython",
+      "platform": "Linux-6.18.57-x86_64-with-glibc2.41",
+      "machine": "x86_64",
+      "cpu_count": 9
+    },
+    "evaluator_sha256": "5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea",
+    "parameters": {
+      "rows": 40000,
+      "groups": 128,
+      "repeats": 3,
+      "seed": 20261126
+    },
+    "source_sha256": "8d1c8e78b0a8c9f4b93e19c960717ec597f6f1867619324a9dd0a9453ae2ed0b",
+    "total_wall_seconds": 0.8050473900002544
+  },
+  "profile": {
+    "command": [
+      "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "examples/jsonl_aggregate/run_research.py",
+      "--store",
+      "runs/controller-validation-2026-11-27-final"
+    ],
+    "context_fingerprint": "2c88b97adf6c47d5d951d963a0cb22d37764dafd7f59155089a8b7b38229e598",
+    "elapsed_seconds": 0.11629876400002104,
+    "findings": [
+      "Largest self-time: aggregate at 0.115328s",
+      "Compare this aggregation profile with baseline end-to-end times in the handoff."
+    ],
+    "functions": [
+      {
+        "calls": 1,
+        "cumulative_seconds": 0.11620250900000001,
+        "file": "solution.py",
+        "function": "aggregate",
+        "line": 4,
+        "self_seconds": 0.11532787200000001
+      },
+      {
+        "calls": 128,
+        "cumulative_seconds": 0.000793141,
+        "file": "~",
+        "function": "<built-in method builtins.sum>",
+        "line": 0,
+        "self_seconds": 0.000793141
+      },
+      {
+        "calls": 128,
+        "cumulative_seconds": 3.9992e-05,
+        "file": "~",
+        "function": "<built-in method builtins.len>",
+        "line": 0,
+        "self_seconds": 3.9992e-05
+      },
+      {
+        "calls": 1,
+        "cumulative_seconds": 3.2018000000000004e-05,
+        "file": "~",
+        "function": "<method 'disable' of '_lsprof.Profiler' objects>",
+        "line": 0,
+        "self_seconds": 3.2018000000000004e-05
+      },
+      {
+        "calls": 128,
+        "cumulative_seconds": 2.3908000000000002e-05,
+        "file": "~",
+        "function": "<method 'append' of 'list' objects>",
+        "line": 0,
+        "self_seconds": 2.3908000000000002e-05
+      },
+      {
+        "calls": 1,
+        "cumulative_seconds": 1.7596000000000002e-05,
+        "file": "~",
+        "function": "<built-in method builtins.sorted>",
+        "line": 0,
+        "self_seconds": 1.7596000000000002e-05
+      }
+    ],
+    "groups": 128,
+    "kind": "actual_cprofile",
+    "profile_text": "         387 function calls in 0.116 seconds\n\n   Ordered by: internal time\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        1    0.115    0.115    0.116    0.116 solution.py:4(aggregate)\n      128    0.001    0.000    0.001    0.000 {built-in method builtins.sum}\n      128    0.000    0.000    0.000    0.000 {built-in method builtins.len}\n        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}\n      128    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}\n        1    0.000    0.000    0.000    0.000 {built-in method builtins.sorted}\n\n\n",
+    "profiler_sha256": "551eb91338e282735a3c72c5938f344f724ae037b4fcbcf383a63372d2e839f8",
+    "rows": 40000,
+    "scope": "aggregate(records) only; profiler overhead is included; not the scored full pipeline",
+    "source_digest": "d21cb7fb98b94cb4f7abe6720d540e3a600cb6613b21a1b3f67e970d70a6fa63",
+    "source_sha256": "0452f8007e8bfd17c8c0f30af46e3c0d4586998630ac1ecb2ece8fd7d8b9e04e"
+  },
+  "raw_evidence_policy": "Full raw runs are not committed. Archive evaluation evidence retains exact file inventories and digests; the CI script recreates this protocol. Portable export includes selected search and confirmation, not the entire research session."
+}

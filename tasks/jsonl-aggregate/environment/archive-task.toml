@@ -10,6 +10,11 @@ task_revision = "jsonl-Harness-v1"
 evaluator_revision = "sha256:5d2940551543b459220997053329147a5421820c22f5810dc29400d920bf5cea"
 environment = "CPU smoke; Python image tag python:3.11-slim; baseline recalibrated in each Judge; record resolved image and runtime before production comparisons"
 
+[context.upstream_pins.harness]
+repository = "https://github.com/OpenRSI-Foundation/OpenRSI-Index.git"
+revision = "486eec2b93296c514238f242f172703c3736ccc1"
+package_path = "RSI-Harness"
+
 [harness]
 task_id = "jsonl-aggregate"
 

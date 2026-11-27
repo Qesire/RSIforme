@@ -154,6 +154,52 @@ def _source_inventory(workspace: Path, paths: list[str]) -> tuple[list[dict], li
     return sorted(files, key=lambda item: item["path"]), sorted(directories)
 
 
+def _timestamp(value: Any, label: str) -> dt.datetime:
+    if not isinstance(value, str):
+        raise ArchiveError(f"{label} must be an ISO timestamp with a timezone")
+    try:
+        parsed = dt.datetime.fromisoformat(value)
+    except ValueError as error:
+        raise ArchiveError(f"{label} must be an ISO timestamp with a timezone") from error
+    if parsed.utcoffset() is None:
+        raise ArchiveError(f"{label} must be an ISO timestamp with a timezone")
+    return parsed
+
+
+def _execution(value: Any) -> dict | None:
+    """Validate optional metadata; legacy evaluation records remain readable."""
+    if value is None:
+        return None
+    if not isinstance(value, dict) or not isinstance(value.get("id"), str) or not value["id"].strip():
+        raise ArchiveError("execution requires a nonempty id")
+    started = _timestamp(value.get("started_at"), "execution.started_at")
+    finished = _timestamp(value.get("finished_at"), "execution.finished_at")
+    if finished < started:
+        raise ArchiveError("execution.finished_at must not precede started_at")
+    if "confirmation_of" not in value:
+        raise ArchiveError("execution.confirmation_of must name the search evaluation or be null")
+    if value["confirmation_of"] is not None:
+        _identifier(value["confirmation_of"])
+    return value
+
+
+def _evidence_inventory(root: Path) -> list[dict]:
+    """Hash every regular file, including dotfiles and evaluator caches."""
+    if root.is_symlink() or not root.is_dir():
+        raise ArchiveError(f"Evidence directory is missing or is a symlink: {root}")
+    files = []
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise ArchiveError(f"Evidence symlinks are not supported: {path}")
+        if path.is_dir():
+            continue
+        if not path.is_file():
+            raise ArchiveError(f"Evidence contains a non-regular file: {path}")
+        files.append({"path": path.relative_to(root).as_posix(), "sha256": file_sha(path),
+                      "size": path.stat().st_size})
+    return files
+
+
 class Archive:
     def __init__(self, root: str | Path):
         self.root = Path(root).expanduser().resolve()
@@ -177,7 +223,7 @@ class Archive:
                     raise ArchiveError("Task/context differs. Start a new archive to preserve comparability.")
                 return existing
             atomic_json(path, manifest)
-            for name in ("candidates", "evaluations", "submissions", "releases", "evidence"):
+            for name in ("candidates", "evaluations", "submissions", "releases", "evidence", "attachments"):
                 (self.root / name).mkdir(exist_ok=True)
         return manifest
 
@@ -306,6 +352,114 @@ class Archive:
             raise ArchiveError(f"Unknown evaluation: {evaluation_id}")
         return load_json(path)
 
+    def _copy_evidence(self, evidence: str | Path, target: Path) -> list[dict]:
+        """Copy, hash and flush evidence before publishing its immutable record."""
+        original = Path(evidence).expanduser()
+        if original.is_symlink():
+            raise ArchiveError("Evidence symlinks are not supported")
+        original = original.resolve()
+        if (original == self.root or self.root.is_relative_to(original)
+                or target == original or target.is_relative_to(original)):
+            raise ArchiveError("Evidence cannot contain the archive itself or its destination")
+        if original.is_dir():
+            before = _evidence_inventory(original)
+        elif original.is_file():
+            before = [{"path": original.name, "sha256": file_sha(original), "size": original.stat().st_size}]
+        else:
+            raise ArchiveError(f"Evidence does not exist or is not regular: {original}")
+        staging = Path(tempfile.mkdtemp(prefix=".evidence-", dir=self.root))
+        try:
+            copied = staging / "files"
+            if original.is_dir():
+                shutil.copytree(original, copied)
+            else:
+                copied.mkdir()
+                shutil.copyfile(original, copied / original.name)
+            files = _evidence_inventory(copied)
+            after = (_evidence_inventory(original) if original.is_dir() else
+                     [{"path": original.name, "sha256": file_sha(original), "size": original.stat().st_size}])
+            if files != before or after != before:
+                raise ArchiveError("Evidence changed while being captured; retry after the writer finishes")
+            for item in files:
+                with (copied / item["path"]).open("rb") as saved:
+                    os.fsync(saved.fileno())
+            for directory in sorted((p for p in copied.rglob("*") if p.is_dir()),
+                                    key=lambda p: len(p.parts), reverse=True):
+                sync_directory(directory)
+            sync_directory(copied)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(copied, target)
+            for directory in (target.parent, *target.parent.parents):
+                sync_directory(directory)
+                if directory == self.root:
+                    break
+            return files
+        finally:
+            shutil.rmtree(staging)
+
+    def _verify_evidence_record(self, record: dict) -> dict:
+        relative = record.get("evidence_path")
+        has_files, has_digest = "evidence_files" in record, "evidence_digest" in record
+        if not has_files and not has_digest:
+            return {"verified": False, "status": "legacy_unverified" if relative else "not_recorded",
+                    "evidence_path": relative, "files": [], "evidence_digest": None}
+        if not has_files or not has_digest or not relative:
+            raise ArchiveError("Evidence inventory is incomplete")
+        path = self.root / _relative_path(relative)
+        for parent in (path, *path.parents):
+            if parent == self.root:
+                break
+            if parent.is_symlink():
+                raise ArchiveError("Archived evidence path contains a symlink")
+        expected = record["evidence_files"]
+        if not isinstance(expected, list) or fingerprint(expected) != record["evidence_digest"]:
+            raise ArchiveError("Archived evidence inventory digest is invalid")
+        actual = _evidence_inventory(path)
+        if actual != expected:
+            raise ArchiveError("Archived evidence has changed or contains missing/extra files")
+        return {"verified": True, "status": "verified", "evidence_path": relative,
+                "files": expected, "evidence_digest": record["evidence_digest"]}
+
+    def verify_evidence(self, evaluation_id: str) -> dict:
+        """Read-only integrity check. Callers may hold the archive lock already."""
+        record = self.evaluation(evaluation_id)
+        verified = self._verify_evidence_record(record)
+        attachments = []
+        directory = self.root / "attachments" / evaluation_id
+        if directory.is_symlink() or directory.parent.is_symlink():
+            raise ArchiveError("Evidence attachment directory contains a symlink")
+        for path in sorted(directory.glob("*.json")):
+            if path.is_symlink():
+                raise ArchiveError("Evidence attachment manifest contains a symlink")
+            attachment = load_json(path)
+            if attachment.get("evaluation_id") != evaluation_id or attachment.get("id") != path.stem:
+                raise ArchiveError("Evidence attachment belongs to a different evaluation")
+            checked = self._verify_evidence_record(attachment)
+            if not checked["verified"]:
+                raise ArchiveError("Evidence attachment is missing its inventory")
+            attachments.append({**attachment, **checked,
+                                "manifest_path": path.relative_to(self.root).as_posix()})
+        return {"evaluation_id": evaluation_id, **verified, "attachments": attachments}
+
+    def attach_evidence(self, evaluation_id: str, evidence: str | Path, label: str) -> dict:
+        """Append later evidence without changing the original evaluation record."""
+        if not isinstance(label, str) or not label.strip():
+            raise ArchiveError("Evidence attachment needs a descriptive label")
+        with self._lock():
+            self.evaluation(evaluation_id)
+            attachment_id = "a-" + uuid.uuid4().hex[:16]
+            target = self.root / "evidence" / (evaluation_id + "-attachments") / attachment_id
+            files = self._copy_evidence(evidence, target)
+            record = {"schema_version": 1, "id": attachment_id, "evaluation_id": evaluation_id,
+                      "created_at": now(), "label": label.strip(),
+                      "evidence_path": target.relative_to(self.root).as_posix(),
+                      "evidence_files": files, "evidence_digest": fingerprint(files)}
+            path = self.root / "attachments" / evaluation_id / (attachment_id + ".json")
+            atomic_json(path, record)
+            sync_directory(path.parent.parent)
+            sync_directory(self.root)
+            return {**record, "manifest_path": path.relative_to(self.root).as_posix()}
+
     def record_evaluation(self, candidate_id: str, result: dict, *, kind: str = "search",
                           evidence: str | Path | None = None) -> dict:
         manifest = self.candidate(candidate_id)
@@ -334,36 +488,32 @@ class Archive:
             raise ArchiveError("harness_run_id and round_id must be recorded together")
         if not result.get("eval_run_id") and not harness_id:
             raise ArchiveError("Provide eval_run_id or the bound Harness run/round identity")
+        execution = _execution(result.get("execution"))
+        if execution and kind == "search" and execution["confirmation_of"] is not None:
+            raise ArchiveError("A search execution cannot confirm another evaluation")
         with self._lock():
             if harness_id:
                 binding = self.binding(harness_id, round_id)
                 if binding["candidate_id"] != candidate_id or binding["kind"] != kind:
                     raise ArchiveError("Harness round binding disagrees with candidate or evaluation kind")
+                if (execution and "confirmation_of" in binding
+                        and execution["confirmation_of"] != binding["confirmation_of"]):
+                    raise ArchiveError("Harness execution disagrees with the submission's confirmation_of")
             for previous in self.evaluations():
                 same_eval = result.get("eval_run_id") and previous.get("eval_run_id") == result["eval_run_id"]
                 same_round = harness_id and (previous.get("harness_run_id"), previous.get("round_id")) == (harness_id, round_id)
-                if same_eval or same_round:
+                same_execution = execution and (previous.get("execution") or {}).get("id") == execution["id"]
+                if same_eval or same_round or same_execution:
                     raise ArchiveError("This evaluation execution is already recorded")
             evaluation_id = "e-" + uuid.uuid4().hex[:16]
             record = {**json.loads(canonical(result)), "schema_version": 1, "id": evaluation_id,
                       "candidate_id": candidate_id, "kind": kind, "created_at": now()}
             if evidence:
-                evidence_path = Path(evidence).resolve()
                 target = self.root / "evidence" / evaluation_id
-                if evidence_path == self.root or self.root.is_relative_to(evidence_path):
-                    raise ArchiveError("Evidence cannot contain the archive itself")
-                if evidence_path.is_dir():
-                    # No symlinks: evidence must remain available after the original workspace disappears.
-                    for p in evidence_path.rglob("*"):
-                        if p.is_symlink():
-                            raise ArchiveError("Evidence symlinks are not supported")
-                    shutil.copytree(evidence_path, target)
-                elif evidence_path.is_file() and not evidence_path.is_symlink():
-                    target.mkdir()
-                    shutil.copyfile(evidence_path, target / evidence_path.name)
-                else:
-                    raise ArchiveError(f"Evidence does not exist: {evidence_path}")
+                files = self._copy_evidence(evidence, target)
                 record["evidence_path"] = target.relative_to(self.root).as_posix()
+                record["evidence_files"] = files
+                record["evidence_digest"] = fingerprint(files)
             atomic_json(self.root / "evaluations" / (evaluation_id + ".json"), record)
             return record
 
@@ -378,18 +528,38 @@ class Archive:
         record = select(eligible, key=lambda row: row["metrics"][task["objective"]])
         return {"candidate": self.candidate(record["candidate_id"]), "evaluation": record}
 
-    def begin_submission(self, candidate_id: str, harness_run_id: str, *, kind: str = "search") -> dict:
+    def begin_submission(self, candidate_id: str, harness_run_id: str, *, kind: str = "search",
+                         confirmation_of: str | None = None) -> dict:
         manifest = self.candidate(candidate_id)
         _identifier(harness_run_id)
         if kind not in ("search", "confirmation"):
             raise ArchiveError("Unknown evaluation kind")
+        if kind == "search" and confirmation_of is not None:
+            raise ArchiveError("Only a confirmation submission may specify confirmation_of")
         with self._lock():
             if any(s["harness_run_id"] == harness_run_id and s["status"] == "pending"
                    for s in self._records("submissions")):
                 raise ArchiveError("This Harness run has an unresolved submission; recover its round first")
-            record = {"id": "s-" + uuid.uuid4().hex[:16], "created_at": now(),
+            created_at = now()
+            if kind == "confirmation":
+                eligible = [row for row in self.evaluations()
+                            if row["candidate_id"] == candidate_id and row["kind"] == "search"
+                            and row["status"] == "completed" and row["valid"]
+                            and row["source_digest"] == manifest["source_digest"]
+                            and row["context_fingerprint"] == manifest["context_fingerprint"]]
+                if confirmation_of is not None:
+                    _identifier(confirmation_of)
+                    eligible = [row for row in eligible if row["id"] == confirmation_of]
+                if not eligible:
+                    raise ArchiveError("Confirmation requires an existing valid search of the same candidate/context")
+                search = eligible[-1]
+                if _timestamp(search["created_at"], "search.created_at") > _timestamp(created_at, "submission.created_at"):
+                    raise ArchiveError("The search evaluation must exist before the confirmation submission")
+                confirmation_of = search["id"]
+            record = {"id": "s-" + uuid.uuid4().hex[:16], "created_at": created_at,
                       "candidate_id": candidate_id, "harness_run_id": harness_run_id,
                       "round_id": None, "status": "pending", "kind": kind,
+                      "confirmation_of": confirmation_of,
                       "source_digest": manifest["source_digest"],
                       "context_fingerprint": manifest["context_fingerprint"]}
             atomic_json(self.root / "submissions" / (record["id"] + ".json"), record)
@@ -439,11 +609,30 @@ class Archive:
                     or record["source_digest"] != manifest["source_digest"]
                     or record["context_fingerprint"] != manifest["context_fingerprint"]):
                 raise ArchiveError("Promotion needs valid search and fresh confirmation of the same candidate/context")
-        if confirmation["created_at"] <= search["created_at"]:
-            raise ArchiveError("Confirmation must follow the selected search evaluation")
+        search_execution = _execution(search.get("execution"))
+        confirmation_execution = _execution(confirmation.get("execution"))
+        if not search_execution or not confirmation_execution:
+            raise ArchiveError("Promotion requires execution metadata; legacy records cannot establish fresh confirmation")
+        if (confirmation_execution["confirmation_of"] != search_evaluation
+                or search_execution["confirmation_of"] is not None):
+            raise ArchiveError("Confirmation must identify the exact selected search evaluation in confirmation_of")
+        confirmation_start = _timestamp(confirmation_execution["started_at"], "confirmation.started_at")
+        if (confirmation_start < _timestamp(search_execution["finished_at"], "search.finished_at")
+                or confirmation_start < _timestamp(search["created_at"], "search.created_at")):
+            raise ArchiveError("Confirmation execution must follow both search completion and its recorded result")
+        if search_execution["id"] == confirmation_execution["id"]:
+            raise ArchiveError("Search and confirmation must be different executions")
         task = self.config["task"]
         with self._lock():
+            for evaluation_id in (search_evaluation, confirmation_evaluation):
+                if not self.verify_evidence(evaluation_id)["verified"]:
+                    raise ArchiveError("Promotion requires verified retained evidence for search and confirmation")
             current_path = self.root / "CURRENT.json"
+            existing = [row for row in self._records("releases")
+                        if row["candidate_id"] == candidate_id and row["search_evaluation"] == search_evaluation
+                        and row["confirmation_evaluation"] == confirmation_evaluation]
+            if existing and current_path.exists() and load_json(current_path)["release_id"] == existing[-1]["id"]:
+                return existing[-1]
             if current_path.exists():
                 previous = load_json(self.root / "releases" / (load_json(current_path)["release_id"] + ".json"))
                 prior_value = self.evaluation(previous["confirmation_evaluation"])["metrics"][task["objective"]]
@@ -451,13 +640,14 @@ class Archive:
                 improved = next_value > prior_value if task["direction"] == "maximize" else next_value < prior_value
                 if not improved:
                     raise ArchiveError("Confirmation does not improve the current release's objective")
-            record = {"schema_version": 1, "id": "r-" + uuid.uuid4().hex[:16],
+            record = existing[-1] if existing else {"schema_version": 1, "id": "r-" + uuid.uuid4().hex[:16],
                       "created_at": now(), "candidate_id": candidate_id,
                       "source_digest": manifest["source_digest"],
                       "context_fingerprint": manifest["context_fingerprint"],
                       "search_evaluation": search_evaluation,
                       "confirmation_evaluation": confirmation_evaluation}
-            atomic_json(self.root / "releases" / (record["id"] + ".json"), record)
+            if not existing:
+                atomic_json(self.root / "releases" / (record["id"] + ".json"), record)
             atomic_json(current_path, {"release_id": record["id"], "candidate_id": candidate_id})
             return record
 

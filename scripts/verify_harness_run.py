@@ -10,14 +10,17 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import replace
+from datetime import datetime
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 from rsiforme.archive import Archive, atomic_json
+from rsiforme.delivery import export_release, verify_release
 from rsiforme.harness import HARNESS_REVISION, read_best_report, read_round_report, read_run_identity
 from rsiforme.workflow import import_harness
 
@@ -130,7 +133,7 @@ restored = archive.restore(best['candidate']['id'], work / 'research' / 'restore
 shutil.copyfile(restored / 'solution.py', work / 'solution.py')
 confirmation = submit(
     archive, work, harness_run_id=run_id, candidate_id=best['candidate']['id'],
-    kind='confirmation',
+    kind='confirmation', confirmation_of=best['evaluation']['id'],
 )
 release = archive.promote(
     best['candidate']['id'], best['evaluation']['id'], confirmation['evaluation']['id'],
@@ -181,6 +184,135 @@ def _judge_source_digest(task_root: Path, round_id: str) -> str:
     return digest
 
 
+def _timestamp(value: str) -> datetime:
+    result = datetime.fromisoformat(value)
+    if result.utcoffset() is None:
+        raise ValueError("execution evidence requires timestamps with a timezone")
+    return result
+
+
+def _evidence_inventory(root: Path) -> list[dict]:
+    """Independently compare every copied native file, including caches/dotfiles."""
+    if root.is_symlink() or not root.is_dir():
+        raise ValueError("native evidence directory is absent or a symlink")
+    result = []
+    for path in sorted(root.rglob("*")):
+        if path.is_symlink():
+            raise ValueError("native evidence contains a symlink")
+        if path.is_dir():
+            continue
+        if not path.is_file():
+            raise ValueError("native evidence contains a non-regular file")
+        contents = path.read_bytes()
+        result.append({"path": path.relative_to(root).as_posix(),
+                       "sha256": hashlib.sha256(contents).hexdigest(), "size": len(contents)})
+    if not result:
+        raise ValueError("native evidence directory is empty")
+    return result
+
+
+def _import_with_provenance(archive: Archive, task_root: Path, run_id: str,
+                            report: dict, binding: dict) -> tuple[dict, dict]:
+    matches = [item for item in archive.evaluations()
+               if (item.get("harness_run_id"), item.get("round_id")) == (run_id, report["round_id"])]
+    if len(matches) != 1:
+        raise ValueError("Work did not record exactly one evaluation for the accepted native round")
+    original = matches[0]
+    evaluation_path = archive.root / "evaluations" / (original["id"] + ".json")
+    original_bytes = evaluation_path.read_bytes()
+    sealed_before = archive.verify_evidence(original["id"])
+    if not sealed_before["verified"] or not sealed_before["files"]:
+        raise ValueError("native response evidence lacks an originally sealed inventory")
+    expected_execution = {
+        "id": f"harness/{run_id}/{report['round_id']}",
+        "started_at": binding["created_at"], "finished_at": binding["bound_at"],
+        "confirmation_of": binding["confirmation_of"],
+    }
+    if original.get("execution") != expected_execution:
+        raise ValueError("native execution identity/timing differs from its submission intent")
+    if not (_timestamp(expected_execution["started_at"]) <= _timestamp(expected_execution["finished_at"])
+            <= _timestamp(original["created_at"])):
+        raise ValueError("native execution and recorded-result timestamps are out of order")
+    imported = import_harness(archive, task_root, run_id, round_id=report["round_id"])
+    if not imported["already_recorded"] or imported["evaluation"] != original:
+        raise ValueError("late native evidence replaced the original evaluation")
+    if evaluation_path.read_bytes() != original_bytes:
+        raise ValueError("late native import rewrote the original evaluation bytes")
+    sealed_after = archive.verify_evidence(original["id"])
+    if (not sealed_after["verified"] or sealed_after["files"] != sealed_before["files"]
+            or sealed_after["evidence_digest"] != sealed_before["evidence_digest"]):
+        raise ValueError("late native import changed the original sealed evidence")
+    prior_ids = {item["id"] for item in sealed_before["attachments"]}
+    retained = {item["id"]: item for item in sealed_after["attachments"]}
+    if any(retained.get(item["id"]) != item for item in sealed_before["attachments"]):
+        raise ValueError("late native import removed or changed a prior sealed attachment")
+    additions = [item for item in sealed_after["attachments"] if item["id"] not in prior_ids]
+    by_label = {item["label"]: item for item in additions}
+    expected_roots = {
+        "harness-durable-round": Path(report["report_path"]).parent,
+        "harness-verifier-output": task_root / "verifier" / report["round_id"],
+    }
+    if len(additions) != 2 or set(by_label) != set(expected_roots):
+        raise ValueError("native import must append both durable-round and full verifier evidence")
+    for label, root in expected_roots.items():
+        if by_label[label]["files"] != _evidence_inventory(root):
+            raise ValueError("late native attachment omits or changes original files: " + label)
+    return original, {
+        "evaluation_id": original["id"], "candidate_id": original["candidate_id"],
+        "round_id": report["round_id"], "execution": expected_execution,
+        "evaluation_record_sha256": hashlib.sha256(original_bytes).hexdigest(),
+        "original_evidence_digest": sealed_after["evidence_digest"],
+        "original_record_unchanged": True,
+        "attachments": [{"id": item["id"], "label": item["label"],
+                         "evidence_digest": item["evidence_digest"], "file_count": len(item["files"])}
+                        for item in additions],
+    }
+
+
+def _verify_export(archive: Archive, output: Path, release: dict) -> dict:
+    """Export only archived source/evidence; never copy the native runtime root."""
+    destination = output / "release"
+    exported = not destination.exists()
+    if exported:
+        export_release(archive, destination, release["id"])
+    checked = verify_release(destination)
+    if checked["release_id"] != release["id"] or checked["reproduction_adapter"] != "rsi-harness":
+        raise ValueError("native delivery refers to a different release or execution adapter")
+    provenance = _read(destination / "provenance.json")
+    if provenance.get("upstream_pins") != archive.config["task"]["context"]["upstream_pins"]:
+        raise ValueError("native delivery omitted or changed the frozen upstream engine pin")
+    for kind in ("search", "confirmation"):
+        original = archive.evaluation(release[kind + "_evaluation"])
+        if _read(destination / "records" / (kind + ".json")) != original:
+            raise ValueError("native delivery changed an evaluation or its execution provenance")
+        packaged = provenance["evaluations"][kind]
+        verifier = [item for item in packaged["attachments"] if item["label"] == "harness-verifier-output"]
+        if not verifier:
+            raise ValueError("native delivery omitted late full verifier evidence")
+        sealed = archive.verify_evidence(original["id"])
+        allowed = {item["evidence_digest"] for item in sealed["attachments"]
+                   if item["label"] == "harness-verifier-output"}
+        for item in verifier:
+            manifest = _read(destination / item["record_path"])
+            if manifest["evidence_digest"] not in allowed:
+                raise ValueError("packaged verifier attachment differs from the sealed archive")
+    with tempfile.TemporaryDirectory(prefix="rsiforme-native-release-check-") as isolated:
+        process = subprocess.run([sys.executable, "-I", str(destination / "verify.py")],
+                                 cwd=isolated, text=True, capture_output=True, check=False)
+    atomic_json(output / "release-verification.json", {
+        "command": ["python", "-I", "release/verify.py"], "isolated_working_directory": True,
+        "exit_code": process.returncode, "stdout": process.stdout, "stderr": process.stderr,
+    })
+    if process.returncode != 0:
+        raise ValueError("standalone native release verification failed: " + process.stderr)
+    standalone = json.loads(process.stdout)
+    if standalone != checked or standalone.get("valid") is not True:
+        raise ValueError("standalone native verifier disagrees with the export verification")
+    return {**checked, "manifest_sha256": hashlib.sha256((destination / "manifest.json").read_bytes()).hexdigest(),
+            "exported_this_verification": exported, "standalone_verified": True,
+            "late_verifier_evidence_included": True}
+
+
 def verify_run(output: Path, mode: str, repository: Path) -> dict:
     """Check actual durable native artifacts; absence is an error, never a skip."""
     task_root = _one_task_root(output / "logs")
@@ -214,6 +346,16 @@ def verify_run(output: Path, mode: str, repository: Path) -> dict:
         archive_checks = None
     else:
         archive = Archive(output / "archive")
+        context = archive.config["task"]["context"]
+        locked = _read(repository / "configs/upstreams.lock.json")["execution"]["harness"]
+        expected_pin = {key: locked[key] for key in ("repository", "revision", "package_path")}
+        if context.get("upstream_pins", {}).get("harness") != expected_pin:
+            raise ValueError("native archive does not preserve the audited upstream engine pin")
+        if context["environment"]["native"]["images"] != plan["images"]:
+            raise ValueError("native archive image identity differs from the actual run plan")
+        actual_image = _read(output / "work-container-image.json")["image_id"]
+        if actual_image != plan["images"]["work_digest"] or not actual_image.startswith("sha256:"):
+            raise ValueError("Docker's actual Work image ID differs from its recorded native image digest")
         worker = _read(archive.root / "native-worker-result.json")
         if worker["harness_run_id"] != identity["harness_run_id"]:
             raise ValueError("Work archive was bound to the wrong native run")
@@ -226,6 +368,7 @@ def verify_run(output: Path, mode: str, repository: Path) -> dict:
             raise ValueError("native wrapper left an unresolved submission")
         if len(archive.candidates()) != 3 or len(archive.evaluations()) != 4:
             raise ValueError("native archive is missing candidate or evaluation records")
+        evidence_checks = []
         for index, report in enumerate(reports, start=1):
             binding = archive.binding(identity["harness_run_id"], report["round_id"])
             candidate = archive.candidate(binding["candidate_id"])
@@ -233,8 +376,9 @@ def verify_run(output: Path, mode: str, repository: Path) -> dict:
             source = next(item for item in candidate["files"] if item["path"] == "solution.py")
             if _judge_source_digest(task_root, report["round_id"]) != source["sha256"]:
                 raise ValueError("native Judge source does not match the pre-submit archived candidate")
-            imported = import_harness(archive, task_root, identity["harness_run_id"], round_id=report["round_id"])
-            evaluation = imported["evaluation"]
+            evaluation, evidence = _import_with_provenance(
+                archive, task_root, identity["harness_run_id"], report, binding)
+            evidence_checks.append(evidence)
             if index == 3:
                 if report["status"] == "completed" or evaluation["valid"]:
                     raise ValueError("native Judge accepted the intentionally incorrect source")
@@ -249,9 +393,20 @@ def verify_run(output: Path, mode: str, repository: Path) -> dict:
                 or confirmation["round_id"] == search["round_id"]
                 or confirmation["candidate_id"] != search["candidate_id"]):
             raise ValueError("release lacks a separate native confirmation of the same candidate")
+        search_execution, confirmation_execution = search["execution"], confirmation["execution"]
+        if (confirmation_execution["confirmation_of"] != search["id"]
+                or search_execution["confirmation_of"] is not None
+                or confirmation_execution["id"] == search_execution["id"]
+                or _timestamp(confirmation_execution["started_at"]) < max(
+                    _timestamp(search_execution["finished_at"]), _timestamp(search["created_at"]))):
+            raise ValueError("native confirmation is not a fresh execution of its exact selected search")
+        delivery = _verify_export(archive, output, release)
         archive_checks = {"candidates": 3, "evaluations": 4, "source_matches_native_judge": True,
                           "invalid_control_rejected": True, "lost_response_recovered": True,
-                          "release": release}
+                          "execution_provenance_verified": True, "evidence_append_only_verified": True,
+                          "late_verifier_evidence_verified": True, "evaluations_provenance": evidence_checks,
+                          "actual_work_image_id": actual_image, "upstream_pin": expected_pin,
+                          "release": release, "delivery": delivery}
     best = read_best_report(task_root)
     summary = {
         "kind": "native_harness_validation",
@@ -307,6 +462,11 @@ def run_scripted(upstream: Path, task: Path, output: Path, data_root: Path, repo
             # Work is still present at this exact lifecycle boundary. Use the
             # supplied container identity, then let the coordinator clean up.
             output.mkdir(parents=True, exist_ok=True)
+            image_id = subprocess.check_output(
+                ["docker", "inspect", "--format", "{{.Image}}", request.container.container_id],
+                text=True,
+            ).strip()
+            atomic_json(output / "work-container-image.json", {"image_id": image_id})
             subprocess.run(["docker", "cp", request.container.container_id + ":/workspace/research/archive",
                             str(output / "archive")], check=True)
             return result

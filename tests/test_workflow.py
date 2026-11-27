@@ -115,6 +115,30 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(called.call_count, 1)
         self.assertEqual(len(Archive(self.archive.root).summary()["pending_submissions"]), 1)
 
+    def test_native_client_timeout_preserves_pending_and_never_dispatches_a_duplicate(self):
+        timeout = subprocess.TimeoutExpired(["rsi-submit"], 0.25,
+                                            output=b"synthetic partial client response\n",
+                                            stderr=b"synthetic remote status is still unknown\n")
+        with patch("rsiforme.workflow.shutil.which", return_value="/synthetic/bin/rsi-submit"), \
+             patch("rsiforme.workflow.subprocess.run", side_effect=timeout) as called:
+            with self.assertRaisesRegex(ArchiveError, "outcome is unknown"):
+                submit(self.archive, self.workspace, harness_run_id="synthetic-run",
+                       hypothesis="Exercise an uncertain native client timeout", timeout_seconds=0.25)
+            self.assertEqual(called.call_args.kwargs["timeout"], 0.25)
+            reopened = Archive(self.archive.root)
+            pending = reopened.summary()["pending_submissions"]
+            self.assertEqual(len(pending), 1)
+            self.assertIsNone(pending[0]["round_id"])
+            self.assertEqual(reopened.evaluations(), [])
+            transcript = (reopened.root / "evidence" / (pending[0]["id"] + "-attempt.txt")).read_text()
+            self.assertIn("synthetic partial client response", transcript)
+            self.assertIn("remote Judge may still be running", transcript)
+            with self.assertRaisesRegex(ArchiveError, "unresolved submission"):
+                submit(reopened, self.workspace, harness_run_id="synthetic-run",
+                       candidate_id=pending[0]["candidate_id"], timeout_seconds=0.25)
+            self.assertEqual(called.call_count, 1)
+            self.assertEqual(len(reopened.summary()["pending_submissions"]), 1)
+
     def test_confirmation_binds_a_distinct_round_to_identical_source(self):
         search = self.call_submit(native_response("agent-1", 1.25), hypothesis="Search candidate")
         candidate = search["evaluation"]["candidate_id"]
