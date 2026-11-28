@@ -64,7 +64,9 @@ Demo 实际执行 JSONL 聚合任务：归档三个预置实现，独立计时�
 
 新增 [Creeperman 策略重放适配器](examples/creeperman_replay/README.md)：以 Creeperman 的逐项审核收据、冻结基线和累计账本构成评价任务，比较 `policy.json` 对已记录资料批次的排序。固定预算下的唯一目标是全局去重后的 `net_eed_units`；真实网站证据、年份和权重由可信评价端提供。[本轮实现与验证](docs/CREEPERMAN_IMPLEMENTATION_RECORD_2026-11-28.md)记录重放合同、跨仓在线策略接合、完整测试与 CPU 演练。
 
-`prepare.py` 固定私有输入与评价器，`run.py` 调用现有 Archive/evaluate_local，`plan.py` 导出已观察前沿的有界计划。相同年度键只计一次，缺失或未完成的结果不作零收益样本；重放不写生产账本、不访问档案馆。新增 [在线策略导出](examples/creeperman_replay/LIVE_POLICY_BRIDGE.md) 已接入 Creeperman 的真实目录/页面前沿：bootstrap 明示为未验证先验，evaluated 核查已确认 release、profile 与封存证据。生产记录到 recorded epoch 的自动导出和真实模型自主采集尚未完成。
+`prepare.py` 固定私有输入与评价器，`run.py` 调用现有 Archive/evaluate_local，`plan.py` 导出已观察前沿的有界计划。相同年度键只计一次，缺失或未完成的结果不作零收益样本；重放不写生产账本、不访问档案馆。[在线策略与生产回执接合](examples/creeperman_replay/LIVE_POLICY_BRIDGE.md) 已接通两个方向：RSI 导出可供真实目录/页面前沿加载的排序策略；Creeperman 的 `discovery_epoch` 将事前声明的操作、实际执行回执、逐项审核及冻结 B/A 投影自动导出，并直接调用 RSI 的 prepare/run。
+
+目录读取或映射可以作为有产物证明的完整 `discovery` 操作揭示子任务；网站年度贡献仍需独立的 `evidence_review` 与完整 settle。解析成功不表示后继候选已经取证。当前跨仓闭环验证使用明确的合成合同资料；真实生产 recorded epoch、在线增益及模型自主采集尚未运行。已有 PCPress 读取回执不能倒填为事前登记的评价。bootstrap 仍是未验证先验，evaluated 仍要求已确认 release、profile 与封存证据。
 
 [两仓的发现方法与执行交接](https://github.com/Qesire/Creeperman/blob/main/docs/CREEPERMAN_RSIFORME_DISCOVERY_LOOP.md)说明历史版本追索、成功路径反馈和来源耗竭的处理。源材料、B 或累计账本变化时建立新 epoch；另用未见来源比较策略，不能把同一任务的新执行确认当成跨来源验证。
 
