@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "backend": {"type": "local"},
+  "worker": {
+    "argv": ["codex", "exec", "--sandbox", "workspace-write", "--skip-git-repo-check", "--json", "--output-schema", "{schema}", "--output-last-message", "{proposal}", "-"]
+  },
+  "budgets": {
+    "max_trials": 2,
+    "max_evaluations": 4,
+    "walltime_seconds": 900,
+    "worker_timeout_seconds": 180
+  },
+  "lanes": [
+    {
+      "id": "edition-priority",
+      "goal": "Use the actual recorded replay trace to revise only the ordering of documented artifact/date features. Distinguish earlier-edition evidence from later storage dates; do not alter evidence years."
+    },
+    {
+      "id": "family-feedback",
+      "goal": "Use completed action outcomes to compare arm_yield and arm_attempts ordering under the same frozen budget. Each arm binds source family, observed year cue and operator revision. Do not transfer 2000 gains to 2001 or treat unobserved/incomplete actions as zero-yield examples."
+    }
+  ],
+  "instructions": "Only policy.json is editable. It accepts schema_version=1 and order_by entries using the documented observable-field whitelist. Propose an explainable ordering change grounded in the actual handoff profile and evaluation IDs. Do not edit the evaluator, epoch, task, weights, rules, baseline, reviewed ledger or adjudications. Do not write new actions, fabricate hosts, issue network requests or submit an evaluation yourself. The controller evaluates the captured policy. Results are recorded-action replay, never new competition contributions. A fresh confirmation repeats this same frozen evaluator; it is not an unseen-source validation. Stop if no meaningful supported change remains."
+}

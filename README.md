@@ -60,6 +60,14 @@ Demo 实际执行 JSONL 聚合任务：归档三个预置实现，独立计时�
 
 自动新建研究线、合并获胜分支和改写研究器策略尚未实现。选择一个最小单控制器是当前实现范围，不代表其已经覆盖 ALE、Sol-Engine 等参考系统的全部能力。控制器使用方法见 [RESEARCH_LOOP](docs/RESEARCH_LOOP.md)。
 
+## 接入 Creeperman 的历史资料发现
+
+新增 [Creeperman 策略重放适配器](examples/creeperman_replay/README.md)：以 Creeperman 的逐项审核收据、冻结基线和累计账本构成评价任务，比较 `policy.json` 对已记录资料批次的排序。固定预算下的唯一目标是全局去重后的 `net_eed_units`；真实网站证据、年份和权重由可信评价端提供。[本轮实现与验证](docs/CREEPERMAN_IMPLEMENTATION_RECORD_2026-11-28.md)记录重放合同、跨仓在线策略接合、完整测试与 CPU 演练。
+
+`prepare.py` 固定私有输入与评价器，`run.py` 调用现有 Archive/evaluate_local，`plan.py` 导出已观察前沿的有界计划。相同年度键只计一次，缺失或未完成的结果不作零收益样本；重放不写生产账本、不访问档案馆。新增 [在线策略导出](examples/creeperman_replay/LIVE_POLICY_BRIDGE.md) 已接入 Creeperman 的真实目录/页面前沿：bootstrap 明示为未验证先验，evaluated 核查已确认 release、profile 与封存证据。生产记录到 recorded epoch 的自动导出和真实模型自主采集尚未完成。
+
+[两仓的发现方法与执行交接](https://github.com/Qesire/Creeperman/blob/main/docs/CREEPERMAN_RSIFORME_DISCOVERY_LOOP.md)说明历史版本追索、成功路径反馈和来源耗竭的处理。源材料、B 或累计账本变化时建立新 epoch；另用未见来源比较策略，不能把同一任务的新执行确认当成跨来源验证。
+
 ## 接入自己的任务
 
 先编辑 [configs/task.example.toml](configs/task.example.toml)，填写任务版本、评价器摘要、真实环境、指标和允许归档的文件。它是 **RSIforme schema 1**；Harness 的 `task.toml` 是另一份配置。模型、数据和大型缓存使用固定引用。
@@ -126,3 +134,4 @@ API 会检查归档源码未改变；恢复目录须不存在。评价器在本�
 各命令的完整参数使用 `python -m rsiforme <命令> --help` 查看。原生 `best_rewards` 可能来自多个候选；适配器按 `best_round` 找到该轮完整指标。提交结果不确定时保留 pending 状态，再从同一 run 的历史恢复，避免重复消耗评价预算。
 
 下一步按 [路线图](docs/ROADMAP.md)，处理客户端运行时初始化问题。本次会话已于 2026-11-27 05:44:31.525519 UTC（北京时间 13:44:31）到期；尚未使用的 worker 数量不构成可恢复额度。未来新实验须另记范围、预算及环境，保留本次失败记录，不能用新目录隐式重置旧会话。相同材料的传输许可已经落实。实际入口及无模型预检命令见 [研究循环](docs/RESEARCH_LOOP.md#公开-jsonl-任务的有限验收入口)。目标 GPU 任务另建硬件基线。开发时阅读 [系统架构](docs/ARCHITECTURE.md) 与 [研究执行指令](program.md)。
+

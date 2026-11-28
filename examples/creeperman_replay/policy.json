@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "order_by": [
+    {"field": "unprocessed", "direction": "desc"},
+    {"field": "direct_evidence", "direction": "desc"},
+    {"field": "year", "direction": "asc"},
+    {"field": "arm_yield", "direction": "desc"},
+    {"field": "input_order", "direction": "asc"}
+  ]
+}
